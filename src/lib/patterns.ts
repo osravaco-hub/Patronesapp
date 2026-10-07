@@ -27,6 +27,7 @@ export interface PatternConfig {
   density: number; // 0-100
   rotation: number; // 0-360
   scale: number; // 0.5-2.0
+  tilePattern: boolean; // Repetir patrón en cuadrícula
 }
 
 export interface PatternDefinition {
@@ -62,6 +63,7 @@ export const defaultConfig: PatternConfig = {
   density: 50,
   rotation: 0,
   scale: 1.0,
+  tilePattern: false,
 };
 
 /**
@@ -117,67 +119,128 @@ export function generatePattern(
   config: PatternConfig,
   seed: number = 42
 ) {
-  const { type, color, backgroundColor, density, rotation, scale } = config;
-
-  // Generate pattern at 2x size to ensure it fills the canvas when rotated
-  const patternWidth = width * 2;
-  const patternHeight = height * 2;
+  const { type, color, backgroundColor, density, rotation, scale, tilePattern } = config;
 
   // Clear and fill background
   ctx.clearRect(0, 0, width, height);
   ctx.fillStyle = backgroundColor;
   ctx.fillRect(0, 0, width, height);
 
-  // Apply rotation around center
-  ctx.save();
-  ctx.translate(width / 2, height / 2);
-  ctx.rotate((rotation * Math.PI) / 180);
-  // Offset to center the larger pattern
-  ctx.translate(-patternWidth / 2, -patternHeight / 2);
-
   ctx.strokeStyle = color;
   ctx.fillStyle = color;
 
+  if (tilePattern) {
+    // Tile mode: repeat pattern in a grid
+    const tileSize = calculateTileSize(type, density, scale);
+    const cols = Math.ceil(width / tileSize) + 2;
+    const rows = Math.ceil(height / tileSize) + 2;
+
+    // Apply rotation around center
+    ctx.save();
+    ctx.translate(width / 2, height / 2);
+    ctx.rotate((rotation * Math.PI) / 180);
+    ctx.translate(-(cols * tileSize) / 2, -(rows * tileSize) / 2);
+
+    // Draw pattern in each tile
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        ctx.save();
+        ctx.translate(col * tileSize, row * tileSize);
+        drawSinglePattern(ctx, type, tileSize, tileSize, color, backgroundColor, density, scale, seed);
+        ctx.restore();
+      }
+    }
+
+    ctx.restore();
+  } else {
+    // Single pattern mode: generate at 2x size
+    const patternWidth = width * 2;
+    const patternHeight = height * 2;
+
+    // Apply rotation around center
+    ctx.save();
+    ctx.translate(width / 2, height / 2);
+    ctx.rotate((rotation * Math.PI) / 180);
+    ctx.translate(-patternWidth / 2, -patternHeight / 2);
+
+    drawSinglePattern(ctx, type, patternWidth, patternHeight, color, backgroundColor, density, scale, seed);
+
+    ctx.restore();
+  }
+}
+
+// Calculate tile size based on pattern type and parameters
+function calculateTileSize(type: PatternId, density: number, scale: number): number {
+  const baseSizes: Record<PatternId, number> = {
+    concentricCircles: 150,
+    diagonalLines: 100,
+    dotGrid: 80,
+    wavyLines: 120,
+    triangleGrid: 100,
+    squareSpiral: 120,
+    scandinavianCross: 100,
+    verticalStripes: 80,
+    voronoi: 200,
+    artDeco: 180,
+    tessellation: 100,
+    fractalTree: 200,
+  };
+
+  const baseSize = baseSizes[type] || 100;
+  const densityFactor = 1 - (density / 200); // Less density = larger tiles
+  return baseSize * scale * densityFactor;
+}
+
+// Draw a single pattern instance
+function drawSinglePattern(
+  ctx: CanvasRenderingContext2D,
+  type: PatternId,
+  w: number,
+  h: number,
+  color: string,
+  backgroundColor: string,
+  density: number,
+  scale: number,
+  seed: number
+) {
   switch (type) {
     case 'concentricCircles':
-      drawConcentricCircles(ctx, patternWidth, patternHeight, color, density, scale);
+      drawConcentricCircles(ctx, w, h, color, density, scale);
       break;
     case 'diagonalLines':
-      drawDiagonalLines(ctx, patternWidth, patternHeight, color, density, scale);
+      drawDiagonalLines(ctx, w, h, color, density, scale);
       break;
     case 'dotGrid':
-      drawDotGrid(ctx, patternWidth, patternHeight, color, density, scale);
+      drawDotGrid(ctx, w, h, color, density, scale);
       break;
     case 'wavyLines':
-      drawWavyLines(ctx, patternWidth, patternHeight, color, density, scale);
+      drawWavyLines(ctx, w, h, color, density, scale);
       break;
     case 'triangleGrid':
-      drawTriangleGrid(ctx, patternWidth, patternHeight, color, density, scale);
+      drawTriangleGrid(ctx, w, h, color, density, scale);
       break;
     case 'squareSpiral':
-      drawSquareSpiral(ctx, patternWidth, patternHeight, color, density, scale);
+      drawSquareSpiral(ctx, w, h, color, density, scale);
       break;
     case 'scandinavianCross':
-      drawScandinavianCross(ctx, patternWidth, patternHeight, color, density, scale);
+      drawScandinavianCross(ctx, w, h, color, density, scale);
       break;
     case 'verticalStripes':
-      drawVerticalStripes(ctx, patternWidth, patternHeight, color, density, scale);
+      drawVerticalStripes(ctx, w, h, color, density, scale);
       break;
     case 'voronoi':
-      drawVoronoi(ctx, patternWidth, patternHeight, color, backgroundColor, density, scale, seed);
+      drawVoronoi(ctx, w, h, color, backgroundColor, density, scale, seed);
       break;
     case 'artDeco':
-      drawArtDeco(ctx, patternWidth, patternHeight, color, density, scale);
+      drawArtDeco(ctx, w, h, color, density, scale);
       break;
     case 'tessellation':
-      drawTessellation(ctx, patternWidth, patternHeight, color, density, scale);
+      drawTessellation(ctx, w, h, color, density, scale);
       break;
     case 'fractalTree':
-      drawFractalTree(ctx, width, height, color, density, scale);
+      drawFractalTree(ctx, w, h, color, density, scale);
       break;
   }
-
-  ctx.restore();
 }
 
 // ─── ULTRA-BASIC PATTERNS ─────────────────────────────────
@@ -574,66 +637,137 @@ export function generateSVG(
   seed: number = 42,
   transparentBackground: boolean = false
 ): string {
-  const { type, color, backgroundColor, density, rotation, scale } = config;
+  const { type, color, backgroundColor, density, rotation, scale, tilePattern } = config;
   const bgColor = transparentBackground ? 'none' : backgroundColor;
 
-  // Generate pattern at 2x size to ensure it fills the canvas when rotated
-  const patternWidth = width * 2;
-  const patternHeight = height * 2;
-
   let patternContent = '';
-  switch (type) {
-    case 'concentricCircles':
-      patternContent = svgConcentricCircles(patternWidth, patternHeight, color, density, scale);
-      break;
-    case 'diagonalLines':
-      patternContent = svgDiagonalLines(patternWidth, patternHeight, color, density, scale);
-      break;
-    case 'dotGrid':
-      patternContent = svgDotGrid(patternWidth, patternHeight, color, density, scale);
-      break;
-    case 'wavyLines':
-      patternContent = svgWavyLines(patternWidth, patternHeight, color, density, scale);
-      break;
-    case 'triangleGrid':
-      patternContent = svgTriangleGrid(patternWidth, patternHeight, color, density, scale);
-      break;
-    case 'squareSpiral':
-      patternContent = svgSquareSpiral(patternWidth, patternHeight, color, density, scale);
-      break;
-    case 'scandinavianCross':
-      patternContent = svgScandinavianCross(patternWidth, patternHeight, color, density, scale);
-      break;
-    case 'verticalStripes':
-      patternContent = svgVerticalStripes(patternWidth, patternHeight, color, density, scale);
-      break;
-    case 'voronoi':
-      patternContent = svgVoronoi(patternWidth, patternHeight, color, density, scale, seed);
-      break;
-    case 'artDeco':
-      patternContent = svgArtDeco(patternWidth, patternHeight, color, density, scale);
-      break;
-    case 'tessellation':
-      patternContent = svgTessellation(patternWidth, patternHeight, color, density, scale);
-      break;
-    case 'fractalTree':
-      patternContent = svgFractalTree(width, height, color, density, scale);
-      break;
-  }
+  let transformAttr = '';
 
-  // Calculate offset to center the larger pattern
-  const offsetX = (patternWidth - width) / 2;
-  const offsetY = (patternHeight - height) / 2;
+  if (tilePattern) {
+    // Tile mode: repeat pattern in a grid
+    const tileSize = calculateTileSize(type, density, scale);
+    const cols = Math.ceil(width / tileSize) + 2;
+    const rows = Math.ceil(height / tileSize) + 2;
+
+    // Generate SVG pattern definition for efficient tiling
+    const singlePattern = generateSingleSVGPattern(type, tileSize, tileSize, color, density, scale, seed);
+    
+    patternContent = `
+    <defs>
+      <pattern id="tilePattern" x="0" y="0" width="${tileSize}" height="${tileSize}" patternUnits="userSpaceOnUse">
+        ${singlePattern}
+      </pattern>
+    </defs>
+    <rect width="${cols * tileSize}" height="${rows * tileSize}" fill="url(#tilePattern)"/>
+    `;
+
+    // Calculate offset to center the tiled pattern
+    const totalWidth = cols * tileSize;
+    const totalHeight = rows * tileSize;
+    const offsetX = (totalWidth - width) / 2;
+    const offsetY = (totalHeight - height) / 2;
+
+    transformAttr = `translate(-${offsetX}, -${offsetY}) rotate(${rotation} ${totalWidth / 2} ${totalHeight / 2})`;
+  } else {
+    // Single pattern mode: generate at 2x size
+    const patternWidth = width * 2;
+    const patternHeight = height * 2;
+
+    switch (type) {
+      case 'concentricCircles':
+        patternContent = svgConcentricCircles(patternWidth, patternHeight, color, density, scale);
+        break;
+      case 'diagonalLines':
+        patternContent = svgDiagonalLines(patternWidth, patternHeight, color, density, scale);
+        break;
+      case 'dotGrid':
+        patternContent = svgDotGrid(patternWidth, patternHeight, color, density, scale);
+        break;
+      case 'wavyLines':
+        patternContent = svgWavyLines(patternWidth, patternHeight, color, density, scale);
+        break;
+      case 'triangleGrid':
+        patternContent = svgTriangleGrid(patternWidth, patternHeight, color, density, scale);
+        break;
+      case 'squareSpiral':
+        patternContent = svgSquareSpiral(patternWidth, patternHeight, color, density, scale);
+        break;
+      case 'scandinavianCross':
+        patternContent = svgScandinavianCross(patternWidth, patternHeight, color, density, scale);
+        break;
+      case 'verticalStripes':
+        patternContent = svgVerticalStripes(patternWidth, patternHeight, color, density, scale);
+        break;
+      case 'voronoi':
+        patternContent = svgVoronoi(patternWidth, patternHeight, color, density, scale, seed);
+        break;
+      case 'artDeco':
+        patternContent = svgArtDeco(patternWidth, patternHeight, color, density, scale);
+        break;
+      case 'tessellation':
+        patternContent = svgTessellation(patternWidth, patternHeight, color, density, scale);
+        break;
+      case 'fractalTree':
+        patternContent = svgFractalTree(width, height, color, density, scale);
+        break;
+    }
+
+    // Calculate offset to center the larger pattern
+    const offsetX = (patternWidth - width) / 2;
+    const offsetY = (patternHeight - height) / 2;
+
+    transformAttr = `translate(-${offsetX}, -${offsetY}) rotate(${rotation} ${patternWidth / 2} ${patternHeight / 2})`;
+  }
 
   const svg = `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
   <rect width="${width}" height="${height}" fill="${bgColor}"/>
-  <g transform="translate(-${offsetX}, -${offsetY}) rotate(${rotation} ${patternWidth / 2} ${patternHeight / 2})">
+  <g transform="${transformAttr}">
     ${patternContent}
   </g>
 </svg>`;
 
   return svg;
+}
+
+// Generate a single SVG pattern instance for tiling
+function generateSingleSVGPattern(
+  type: PatternId,
+  w: number,
+  h: number,
+  color: string,
+  density: number,
+  scale: number,
+  seed: number
+): string {
+  switch (type) {
+    case 'concentricCircles':
+      return svgConcentricCircles(w, h, color, density, scale);
+    case 'diagonalLines':
+      return svgDiagonalLines(w, h, color, density, scale);
+    case 'dotGrid':
+      return svgDotGrid(w, h, color, density, scale);
+    case 'wavyLines':
+      return svgWavyLines(w, h, color, density, scale);
+    case 'triangleGrid':
+      return svgTriangleGrid(w, h, color, density, scale);
+    case 'squareSpiral':
+      return svgSquareSpiral(w, h, color, density, scale);
+    case 'scandinavianCross':
+      return svgScandinavianCross(w, h, color, density, scale);
+    case 'verticalStripes':
+      return svgVerticalStripes(w, h, color, density, scale);
+    case 'voronoi':
+      return svgVoronoi(w, h, color, density, scale, seed);
+    case 'artDeco':
+      return svgArtDeco(w, h, color, density, scale);
+    case 'tessellation':
+      return svgTessellation(w, h, color, density, scale);
+    case 'fractalTree':
+      return svgFractalTree(w, h, color, density, scale);
+    default:
+      return '';
+  }
 }
 
 function svgConcentricCircles(w: number, h: number, color: string, density: number, scale: number): string {

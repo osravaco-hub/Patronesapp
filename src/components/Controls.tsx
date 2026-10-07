@@ -1,7 +1,7 @@
 import { PatternConfig, PATTERN_DEFINITIONS, isPatternAvailable } from '../lib/patterns';
 import PatternSelector from './PatternSelector';
 import { UserTier } from '../lib/userTier';
-import { Shuffle, RotateCcw, Palette, Eye } from 'lucide-react';
+import { Shuffle, RotateCcw, Palette, Eye, Grid } from 'lucide-react';
 
 interface ControlsProps {
   config: PatternConfig;
@@ -172,6 +172,26 @@ export default function Controls({ config, onChange, onRandomize, onReset, tier,
             />
           )}
         </div>
+      </div>
+
+      {/* Pattern Tiling Toggle - All tiers */}
+      <div className="flex items-center justify-between p-3 bg-background rounded-xl border border-border">
+        <div className="flex items-center gap-2">
+          <Grid className="w-4 h-4 text-text/60" />
+          <span className="text-sm font-medium text-text/80">Repetir Patrón</span>
+        </div>
+        <button
+          onClick={() => update({ tilePattern: !config.tilePattern })}
+          className={`w-12 h-6 rounded-full transition-all duration-200 ${
+            config.tilePattern ? 'bg-accent' : 'bg-border'
+          }`}
+        >
+          <div
+            className={`w-5 h-5 rounded-full bg-white shadow-sm transition-transform duration-200 ${
+              config.tilePattern ? 'translate-x-6' : 'translate-x-0.5'
+            }`}
+          />
+        </button>
       </div>
 
       {/* Premium Features */}
