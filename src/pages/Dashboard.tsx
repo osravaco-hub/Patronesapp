@@ -8,10 +8,12 @@ import {
   BarChart3,
   Clock,
   TrendingUp,
+  Settings,
 } from 'lucide-react';
 import { getDefaultUser, UserState, DOWNLOAD_LIMITS, saveUser } from '../lib/userTier';
 import { getDownloadHistory, DownloadRecord, getLimitInfo } from '../lib/limits';
 import { PATTERN_DEFINITIONS } from '../lib/patterns';
+import { createPortalSession } from '../lib/stripe';
 
 interface DashboardProps {
   onBack: () => void;
@@ -46,6 +48,26 @@ export default function Dashboard({ onBack }: DashboardProps) {
     const updated = { ...user, downloadsToday: 0 };
     saveUser(updated);
     setUser(updated);
+  };
+
+  const handleManageSubscription = async () => {
+    if (user.tier !== 'premium') {
+      alert('Solo los usuarios Premium pueden gestionar su suscripción');
+      return;
+    }
+
+    try {
+      // Simulate Stripe Customer Portal
+      const portalUrl = await createPortalSession('user-id', 'cus_placeholder');
+      
+      // In production, redirect to Stripe Portal
+      // window.location.href = portalUrl;
+      
+      alert('✅ Redirigiendo al Portal de Stripe\n\n(Demo: En producción serías redirigido a ' + portalUrl + ')');
+    } catch (error) {
+      console.error('Portal error:', error);
+      alert('Error al abrir el portal de suscripción');
+    }
   };
 
   const getPatternLabel = (id: string): string => {
@@ -285,7 +307,15 @@ export default function Dashboard({ onBack }: DashboardProps) {
                 }
               </p>
             </div>
-            {user.tier !== 'premium' && (
+            {user.tier === 'premium' ? (
+              <button
+                onClick={handleManageSubscription}
+                className="px-4 py-2 bg-white text-premium text-sm font-medium rounded-xl border border-premium/30 hover:bg-premium-light transition-all shrink-0 ml-4 flex items-center gap-2"
+              >
+                <Settings className="w-4 h-4" />
+                Gestionar Suscripción
+              </button>
+            ) : (
               <button
                 onClick={onBack}
                 className="px-4 py-2 bg-gradient-to-r from-premium to-accent text-white text-sm font-medium rounded-xl hover:opacity-90 transition-all shrink-0 ml-4"
