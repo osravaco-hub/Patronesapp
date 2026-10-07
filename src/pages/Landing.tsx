@@ -192,7 +192,7 @@ export default function Landing({ onNavigateDashboard }: LandingProps) {
                   config={config}
                   seed={seed}
                   tier={user.tier}
-                  downloadsToday={user.downloadsToday}
+                  transparentBackground={config.backgroundColor === 'transparent'}
                   onDownload={handleDownload}
                   onPremiumClick={() => setShowPricing(true)}
                 />

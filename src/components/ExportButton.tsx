@@ -1,84 +1,79 @@
 import { useState, useRef } from 'react';
 import { Download, Check, Loader2 } from 'lucide-react';
-import { PatternConfig, generatePattern } from '../lib/patterns';
-import { UserTier, canDownload as canUserDownload, getRemainingDownloads } from '../lib/userTier';
-import { addDownloadRecord, canDownload, WEEKLY_LIMITS } from '../lib/limits';
+import { PatternConfig } from '../lib/patterns';
+import { UserTier } from '../lib/userTier';
+import {
+  exportPattern,
+  triggerDownload,
+  ExportFormat,
+  ExportResolution,
+  getAvailableResolutions,
+  isResolutionAvailable,
+  getResolutionSize,
+} from '../lib/export';
 
 interface ExportButtonProps {
   config: PatternConfig;
   seed: number;
   tier: UserTier;
-  downloadsToday: number;
+  transparentBackground: boolean;
   onDownload: () => void;
   onPremiumClick: () => void;
 }
 
-const EXPORT_OPTIONS = [
-  { id: 'png-600', label: 'PNG 600px', description: 'Resolución estándar', minTier: 'guest' as UserTier },
-  { id: 'png-1200', label: 'PNG 1200px', description: 'Alta resolución', minTier: 'free' as UserTier },
-  { id: 'png-2400', label: 'PNG 2400px', description: 'Ultra alta resolución', minTier: 'premium' as UserTier },
-];
-
-const TIER_ORDER: Record<UserTier, number> = { guest: 0, free: 1, premium: 2 };
-
-function canUseExport(tier: UserTier, minTier: UserTier): boolean {
-  return TIER_ORDER[tier] >= TIER_ORDER[minTier];
-}
-
-export default function ExportButton({ config, seed, tier, downloadsToday, onDownload, onPremiumClick }: ExportButtonProps) {
+export default function ExportButton({
+  config,
+  seed,
+  tier,
+  transparentBackground,
+  onDownload,
+  onPremiumClick,
+}: ExportButtonProps) {
   const [isExporting, setIsExporting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
+  const [selectedFormat, setSelectedFormat] = useState<ExportFormat>('png');
+  const [selectedResolution, setSelectedResolution] = useState<ExportResolution>('1x');
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
 
-  // Use weekly limits
-  const weeklyLimit = WEEKLY_LIMITS[tier];
-  const { allowed, remaining } = canDownload(undefined, tier);
+  const availableResolutions = getAvailableResolutions(tier);
 
-  const handleExport = async (format: string) => {
-    const option = EXPORT_OPTIONS.find((o) => o.id === format);
-    if (!option) return;
-
-    if (!canUseExport(tier, option.minTier)) {
-      onPremiumClick();
-      return;
-    }
-
-    if (!allowed) {
-      onPremiumClick();
-      return;
-    }
-
-    setIsExporting(true);
+  const handleExport = async () => {
     setShowOptions(false);
+    setIsExporting(true);
 
-    await new Promise((r) => setTimeout(r, 600));
+    try {
+      const result = await exportPattern({
+        patternType: config.type,
+        config,
+        format: selectedFormat,
+        resolution: selectedResolution,
+        transparentBackground,
+        userId: 'current-user',
+        seed,
+      });
 
-    const dimensions: Record<string, [number, number]> = {
-      'png-600': [600, 600],
-      'png-1200': [1200, 1200],
-      'png-2400': [2400, 2400],
-    };
+      if (!result.success) {
+        setIsExporting(false);
+        if (result.errorCode === 'LIMIT_REACHED' || result.errorCode === 'UNAUTHORIZED') {
+          onPremiumClick();
+        }
+        return;
+      }
 
-    const [w, h] = dimensions[format] || [600, 600];
-    const canvas = document.createElement('canvas');
-    canvas.width = w;
-    canvas.height = h;
-    const ctx = canvas.getContext('2d')!;
-    generatePattern(ctx, w, h, config, seed);
+      if (result.dataUrl && result.filename) {
+        triggerDownload(result.dataUrl, result.filename);
+        onDownload();
 
-    const link = document.createElement('a');
-    link.download = `geopattern-${config.type}-${seed}.png`;
-    link.href = canvas.toDataURL('image/png');
-    link.click();
-
-    addDownloadRecord(config.type, format);
-    onDownload();
-
-    setIsExporting(false);
-    setSuccess(true);
-    if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    timeoutRef.current = setTimeout(() => setSuccess(false), 2000);
+        setSuccess(true);
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        timeoutRef.current = setTimeout(() => setSuccess(false), 2000);
+      }
+    } catch (err) {
+      console.error('Export failed:', err);
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   return (
@@ -106,37 +101,82 @@ export default function ExportButton({ config, seed, tier, downloadsToday, onDow
       </button>
 
       {showOptions && (
-        <div className="absolute bottom-full left-0 right-0 mb-2 bg-white rounded-xl border border-border shadow-xl p-3 space-y-1 z-50">
-          <div className="px-2 py-1.5 text-xs font-semibold text-text/50 uppercase tracking-wider">
-            Formato de exportación
-            {remaining !== Infinity && (
-              <span className="ml-2 text-accent">({remaining} restantes esta semana)</span>
-            )}
-          </div>
-          {EXPORT_OPTIONS.map((option) => {
-            const available = canUseExport(tier, option.minTier);
-            return (
+        <div className="absolute bottom-full left-0 right-0 mb-2 bg-white rounded-xl border border-border shadow-xl p-4 space-y-4 z-50">
+          {/* Format Selection */}
+          <div className="space-y-2">
+            <label className="text-xs font-semibold text-text/50 uppercase tracking-wider">
+              Formato
+            </label>
+            <div className="grid grid-cols-2 gap-2">
               <button
-                key={option.id}
-                onClick={() => handleExport(option.id)}
-                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-left transition-all ${
-                  available
-                    ? 'hover:bg-accent-light text-text'
-                    : 'opacity-50 hover:bg-premium-light/50'
+                onClick={() => setSelectedFormat('png')}
+                className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                  selectedFormat === 'png'
+                    ? 'bg-accent text-white'
+                    : 'bg-background text-text/70 hover:bg-accent-light'
                 }`}
               >
-                <div>
-                  <div className="text-sm font-medium">{option.label}</div>
-                  <div className="text-xs text-text/50">{option.description}</div>
-                </div>
-                {!available && (
-                  <span className="text-xs font-medium text-premium bg-premium-light px-2 py-0.5 rounded-full">
-                    {option.minTier === 'premium' ? 'Premium' : 'Free'}
-                  </span>
-                )}
+                PNG
               </button>
-            );
-          })}
+              <button
+                onClick={() => setSelectedFormat('svg')}
+                className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                  selectedFormat === 'svg'
+                    ? 'bg-accent text-white'
+                    : 'bg-background text-text/70 hover:bg-accent-light'
+                }`}
+              >
+                SVG
+              </button>
+            </div>
+          </div>
+
+          {/* Resolution Selection */}
+          <div className="space-y-2">
+            <label className="text-xs font-semibold text-text/50 uppercase tracking-wider">
+              Resolución
+            </label>
+            <div className="grid grid-cols-3 gap-2">
+              {(['1x', '2x', '3x'] as ExportResolution[]).map((res) => {
+                const available = isResolutionAvailable(tier, res);
+                const size = getResolutionSize(res);
+                const isSelected = selectedResolution === res;
+
+                return (
+                  <button
+                    key={res}
+                    onClick={() => {
+                      if (available) {
+                        setSelectedResolution(res);
+                      } else {
+                        onPremiumClick();
+                      }
+                    }}
+                    className={`px-2 py-2 rounded-lg text-xs font-medium transition-all ${
+                      !available
+                        ? 'bg-premium-light/50 text-premium/60 border border-premium/20'
+                        : isSelected
+                          ? 'bg-accent text-white'
+                          : 'bg-background text-text/70 hover:bg-accent-light'
+                    }`}
+                  >
+                    <div className="font-bold">{res}</div>
+                    <div className="text-[10px] opacity-75">{size}px</div>
+                    {!available && <div className="text-[9px] mt-0.5">Premium</div>}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Export Button */}
+          <button
+            onClick={handleExport}
+            disabled={isExporting}
+            className="w-full py-2.5 bg-accent text-white text-sm font-medium rounded-lg hover:bg-accent/90 transition-all disabled:opacity-70"
+          >
+            {isExporting ? 'Generando...' : `Exportar ${selectedFormat.toUpperCase()} ${selectedResolution}`}
+          </button>
         </div>
       )}
     </div>
