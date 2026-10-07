@@ -173,7 +173,7 @@ export function generatePattern(
       drawTessellation(ctx, patternWidth, patternHeight, color, density, scale);
       break;
     case 'fractalTree':
-      drawFractalTree(ctx, width, height, color, density, scale);
+      drawFractalTree(ctx, patternWidth, patternHeight, color, density, scale);
       break;
   }
 
@@ -617,7 +617,7 @@ export function generateSVG(
       patternContent = svgTessellation(patternWidth, patternHeight, color, density, scale);
       break;
     case 'fractalTree':
-      patternContent = svgFractalTree(width, height, color, density, scale);
+      patternContent = svgFractalTree(patternWidth, patternHeight, color, density, scale);
       break;
   }
 
