@@ -299,7 +299,8 @@ export default function NewLanding({ onNavigateGenerator, onNavigateDashboard }:
             Comienza gratis, actualiza cuando necesites más
           </p>
 
-          <div className="grid md:grid-cols-3 gap-6">
+          {/* Grid: 1 col mobile, 3 cols desktop */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* GUEST */}
             <PlanCard
               name="Invitado"
@@ -360,7 +361,8 @@ export default function NewLanding({ onNavigateGenerator, onNavigateDashboard }:
             Galería de Ejemplos
           </h3>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {/* Grid: 2 cols mobile, 3 cols tablet, 4 cols desktop */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
             {PATTERN_DEFINITIONS.map((pattern, idx) => (
               <div
                 key={pattern.id}
@@ -373,7 +375,7 @@ export default function NewLanding({ onNavigateGenerator, onNavigateDashboard }:
                   }
                 }}
               >
-                <div className="aspect-square rounded-xl overflow-hidden border border-border hover:scale-105 transition-transform duration-200">
+                <div className="aspect-square rounded-xl overflow-hidden border border-border hover:scale-105 transition-transform duration-200 shadow-sm">
                   <PatternCanvas
                     config={{ ...defaultConfig, type: pattern.id }}
                     seed={idx * 100}
@@ -383,9 +385,9 @@ export default function NewLanding({ onNavigateGenerator, onNavigateDashboard }:
                   />
                 </div>
                 <div className="mt-2 text-center">
-                  <p className="text-sm font-medium">{pattern.label}</p>
+                  <p className="text-xs md:text-sm font-medium truncate">{pattern.label}</p>
                   {pattern.tier === 'advanced' && (
-                    <span className="text-xs text-premium">Premium</span>
+                    <span className="text-xs text-premium font-medium">Premium</span>
                   )}
                 </div>
               </div>

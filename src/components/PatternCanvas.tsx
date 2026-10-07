@@ -1,4 +1,4 @@
-import { useEffect, useRef, useMemo } from 'react';
+import { useEffect, useRef, useMemo, memo } from 'react';
 import { generatePattern, PatternConfig, isPatternAvailable, getLockMessage } from '../lib/patterns';
 import { UserTier } from '../lib/userTier';
 
@@ -11,7 +11,7 @@ interface PatternCanvasProps {
   onLockedClick?: () => void;
 }
 
-export default function PatternCanvas({ config, seed, tier, width = 600, height = 600, onLockedClick }: PatternCanvasProps) {
+export default memo(function PatternCanvas({ config, seed, tier, width = 600, height = 600, onLockedClick }: PatternCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const isAvailable = useMemo(
@@ -24,14 +24,17 @@ export default function PatternCanvas({ config, seed, tier, width = 600, height 
     [config.type, tier]
   );
 
+  // Memoize canvas rendering dependencies
+  const canvasDeps = useMemo(() => ({ config, seed, width, height }), [config, seed, width, height]);
+
   // Render pattern to canvas — memoized to avoid unnecessary re-renders
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-    generatePattern(ctx, width, height, config, seed);
-  }, [config, seed, width, height]);
+    generatePattern(ctx, canvasDeps.width, canvasDeps.height, canvasDeps.config, canvasDeps.seed);
+  }, [canvasDeps]);
 
   return (
     <div className="relative rounded-2xl overflow-hidden shadow-lg border border-border bg-white">
@@ -96,4 +99,4 @@ export default function PatternCanvas({ config, seed, tier, width = 600, height 
       </div>
     </div>
   );
-}
+});

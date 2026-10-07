@@ -168,15 +168,16 @@ export default function Landing({ onNavigateDashboard }: LandingProps) {
 
       {/* Generator Section */}
       <section id="generator" className="max-w-7xl mx-auto px-4 sm:px-6 pb-20">
-        <div className="grid lg:grid-cols-5 gap-8">
+        {/* Mobile: stacked, Tablet: 2 cols equal, Desktop: 60/40 split */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 lg:gap-8">
           {/* Canvas Area */}
           <motion.div
-            className="lg:col-span-3"
+            className="md:col-span-1 lg:col-span-3"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
           >
-            <div className="sticky top-24">
+            <div className="lg:sticky lg:top-24">
               <PatternCanvas
                 config={config}
                 seed={seed}
@@ -213,12 +214,12 @@ export default function Landing({ onNavigateDashboard }: LandingProps) {
 
           {/* Controls Panel */}
           <motion.div
-            className="lg:col-span-2"
+            className="md:col-span-1 lg:col-span-2"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
           >
-            <div className="bg-white rounded-2xl border border-border p-6 shadow-sm">
+            <div className="bg-white rounded-2xl border border-border shadow-sm">
               <Controls
                 config={config}
                 onChange={setConfig}
