@@ -1,38 +1,44 @@
 import { useState, useRef } from 'react';
 import { Download, Check, Loader2 } from 'lucide-react';
-import { PatternConfig } from '../lib/patterns';
-import { generatePattern } from '../lib/patterns';
-import { UserPlan, canExport, canDownload, getRemainingDownloads } from '../lib/userTier';
+import { PatternConfig, generatePattern } from '../lib/patterns';
+import { UserTier, canDownload, getRemainingDownloads } from '../lib/userTier';
 import { addDownloadRecord } from '../lib/limits';
 
 interface ExportButtonProps {
   config: PatternConfig;
   seed: number;
-  plan: UserPlan;
+  tier: UserTier;
   downloadsToday: number;
   onDownload: () => void;
   onPremiumClick: () => void;
 }
 
 const EXPORT_OPTIONS = [
-  { id: 'png-low', label: 'PNG 600px', description: 'Baja resolución', premium: false },
-  { id: 'png-high', label: 'PNG 1200px', description: 'Alta resolución', premium: false },
-  { id: 'svg', label: 'SVG Vectorial', description: 'Escalable infinito', premium: false },
-  { id: 'png-ultra', label: 'PNG 2400px', description: 'Ultra alta resolución', premium: true },
-  { id: 'pdf', label: 'PDF Print', description: 'Listo para imprimir', premium: true },
+  { id: 'png-600', label: 'PNG 600px', description: 'Resolución estándar', minTier: 'guest' as UserTier },
+  { id: 'png-1200', label: 'PNG 1200px', description: 'Alta resolución', minTier: 'free' as UserTier },
+  { id: 'png-2400', label: 'PNG 2400px', description: 'Ultra alta resolución', minTier: 'premium' as UserTier },
 ];
 
-export default function ExportButton({ config, seed, plan, downloadsToday, onDownload, onPremiumClick }: ExportButtonProps) {
+const TIER_ORDER: Record<UserTier, number> = { guest: 0, free: 1, premium: 2 };
+
+function canUseExport(tier: UserTier, minTier: UserTier): boolean {
+  return TIER_ORDER[tier] >= TIER_ORDER[minTier];
+}
+
+export default function ExportButton({ config, seed, tier, downloadsToday, onDownload, onPremiumClick }: ExportButtonProps) {
   const [isExporting, setIsExporting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
 
-  const remaining = getRemainingDownloads(plan, downloadsToday);
-  const canDownloadNow = canDownload(plan, downloadsToday);
+  const remaining = getRemainingDownloads(tier, downloadsToday);
+  const canDownloadNow = canDownload(tier, downloadsToday);
 
   const handleExport = async (format: string) => {
-    if (!canExport(plan, format)) {
+    const option = EXPORT_OPTIONS.find((o) => o.id === format);
+    if (!option) return;
+
+    if (!canUseExport(tier, option.minTier)) {
       onPremiumClick();
       return;
     }
@@ -45,41 +51,25 @@ export default function ExportButton({ config, seed, plan, downloadsToday, onDow
     setIsExporting(true);
     setShowOptions(false);
 
-    // Simulate export delay
-    await new Promise((r) => setTimeout(r, 800));
+    await new Promise((r) => setTimeout(r, 600));
 
     const dimensions: Record<string, [number, number]> = {
-      'png-low': [600, 600],
-      'png-high': [1200, 1200],
-      'png-ultra': [2400, 2400],
+      'png-600': [600, 600],
+      'png-1200': [1200, 1200],
+      'png-2400': [2400, 2400],
     };
 
-    if (format === 'svg' || format === 'pdf') {
-      // Export as PNG for all formats (simplified)
-      const [w, h] = dimensions['png-high'] || [1200, 1200];
-      const canvas = document.createElement('canvas');
-      canvas.width = w;
-      canvas.height = h;
-      const ctx = canvas.getContext('2d')!;
-      generatePattern(ctx, w, h, config, seed);
+    const [w, h] = dimensions[format] || [600, 600];
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d')!;
+    generatePattern(ctx, w, h, config, seed);
 
-      const link = document.createElement('a');
-      link.download = `geopattern-${config.type}-${seed}.${format === 'pdf' ? 'png' : format}`;
-      link.href = canvas.toDataURL('image/png');
-      link.click();
-    } else {
-      const [w, h] = dimensions[format] || [600, 600];
-      const canvas = document.createElement('canvas');
-      canvas.width = w;
-      canvas.height = h;
-      const ctx = canvas.getContext('2d')!;
-      generatePattern(ctx, w, h, config, seed);
-
-      const link = document.createElement('a');
-      link.download = `geopattern-${config.type}-${seed}.png`;
-      link.href = canvas.toDataURL('image/png');
-      link.click();
-    }
+    const link = document.createElement('a');
+    link.download = `geopattern-${config.type}-${seed}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
 
     addDownloadRecord(config.type, format);
     onDownload();
@@ -114,7 +104,6 @@ export default function ExportButton({ config, seed, plan, downloadsToday, onDow
         {isExporting ? 'Exportando...' : success ? '¡Descargado!' : 'Exportar Patrón'}
       </button>
 
-      {/* Download options dropdown */}
       {showOptions && (
         <div className="absolute bottom-full left-0 right-0 mb-2 bg-white rounded-xl border border-border shadow-xl p-3 space-y-1 z-50">
           <div className="px-2 py-1.5 text-xs font-semibold text-text/50 uppercase tracking-wider">
@@ -124,7 +113,7 @@ export default function ExportButton({ config, seed, plan, downloadsToday, onDow
             )}
           </div>
           {EXPORT_OPTIONS.map((option) => {
-            const available = canExport(plan, option.id);
+            const available = canUseExport(tier, option.minTier);
             return (
               <button
                 key={option.id}
@@ -141,7 +130,7 @@ export default function ExportButton({ config, seed, plan, downloadsToday, onDow
                 </div>
                 {!available && (
                   <span className="text-xs font-medium text-premium bg-premium-light px-2 py-0.5 rounded-full">
-                    Premium
+                    {option.minTier === 'premium' ? 'Premium' : 'Free'}
                   </span>
                 )}
               </button>

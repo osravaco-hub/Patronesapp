@@ -1,5 +1,5 @@
 // Download limits and tracking
-import { UserPlan, DOWNLOAD_LIMITS } from './userTier';
+import { UserTier, DOWNLOAD_LIMITS } from './userTier';
 
 export interface DownloadRecord {
   id: string;
@@ -29,7 +29,6 @@ export function addDownloadRecord(patternType: string, format: string): Download
   };
   const history = getDownloadHistory();
   history.unshift(record);
-  // Keep only last 100 records
   const trimmed = history.slice(0, 100);
   localStorage.setItem('geopattern_downloads', JSON.stringify(trimmed));
   return record;
@@ -42,14 +41,14 @@ export function getTodayDownloads(): number {
   return history.filter((r) => r.timestamp >= today.getTime()).length;
 }
 
-export function isLimitReached(plan: UserPlan): boolean {
-  const limit = DOWNLOAD_LIMITS[plan];
+export function isLimitReached(tier: UserTier): boolean {
+  const limit = DOWNLOAD_LIMITS[tier];
   if (limit === Infinity) return false;
   return getTodayDownloads() >= limit;
 }
 
-export function getLimitInfo(plan: UserPlan): { used: number; limit: number | string; percentage: number } {
-  const limit = DOWNLOAD_LIMITS[plan];
+export function getLimitInfo(tier: UserTier): { used: number; limit: number | string; percentage: number } {
+  const limit = DOWNLOAD_LIMITS[tier];
   const used = getTodayDownloads();
   if (limit === Infinity) {
     return { used, limit: '∞', percentage: 0 };

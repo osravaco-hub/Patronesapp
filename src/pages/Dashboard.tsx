@@ -9,8 +9,9 @@ import {
   Clock,
   TrendingUp,
 } from 'lucide-react';
-import { getDefaultUser, UserState, resetDailyDownloads, UserPlan } from '../lib/userTier';
+import { getDefaultUser, UserState, DOWNLOAD_LIMITS, saveUser } from '../lib/userTier';
 import { getDownloadHistory, DownloadRecord, getLimitInfo } from '../lib/limits';
+import { PATTERN_DEFINITIONS } from '../lib/patterns';
 
 interface DashboardProps {
   onBack: () => void;
@@ -24,7 +25,7 @@ export default function Dashboard({ onBack }: DashboardProps) {
     setHistory(getDownloadHistory());
   }, []);
 
-  const limitInfo = getLimitInfo(user.plan);
+  const limitInfo = getLimitInfo(user.tier);
 
   const todayHistory = history.filter((r) => {
     const today = new Date();
@@ -40,6 +41,17 @@ export default function Dashboard({ onBack }: DashboardProps) {
   const topPatterns = Object.entries(patternCounts)
     .sort(([, a], [, b]) => b - a)
     .slice(0, 5);
+
+  const handleResetCounter = () => {
+    const updated = { ...user, downloadsToday: 0 };
+    saveUser(updated);
+    setUser(updated);
+  };
+
+  const getPatternLabel = (id: string): string => {
+    const def = PATTERN_DEFINITIONS.find((p) => p.id === id);
+    return def ? def.label : id;
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -62,14 +74,14 @@ export default function Dashboard({ onBack }: DashboardProps) {
           </div>
 
           <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium ${
-            user.plan === 'premium'
+            user.tier === 'premium'
               ? 'bg-premium-light text-premium'
-              : user.plan === 'free'
+              : user.tier === 'free'
                 ? 'bg-accent-light text-accent'
                 : 'bg-border/50 text-text/50'
           }`}>
-            {user.plan === 'premium' && <Crown className="w-3.5 h-3.5" />}
-            {user.plan === 'premium' ? 'Premium' : user.plan === 'free' ? 'Free' : 'Invitado'}
+            {user.tier === 'premium' && <Crown className="w-3.5 h-3.5" />}
+            {user.tier === 'premium' ? 'Premium' : user.tier === 'free' ? 'Free' : 'Invitado'}
           </div>
         </div>
       </header>
@@ -125,10 +137,7 @@ export default function Dashboard({ onBack }: DashboardProps) {
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-semibold">Uso de descargas hoy</h3>
             <button
-              onClick={() => {
-                const updated = resetDailyDownloads(user);
-                setUser(updated);
-              }}
+              onClick={handleResetCounter}
               className="text-xs text-accent hover:underline"
             >
               Resetear contador (demo)
@@ -185,7 +194,7 @@ export default function Dashboard({ onBack }: DashboardProps) {
                     className="flex items-center justify-between p-3 bg-background rounded-xl"
                   >
                     <div>
-                      <div className="text-sm font-medium capitalize">{record.patternType}</div>
+                      <div className="text-sm font-medium">{getPatternLabel(record.patternType)}</div>
                       <div className="text-xs text-text/50">{record.format.toUpperCase()}</div>
                     </div>
                     <div className="text-xs text-text/40">
@@ -218,13 +227,13 @@ export default function Dashboard({ onBack }: DashboardProps) {
               </div>
             ) : (
               <div className="space-y-3">
-                {topPatterns.map(([pattern, count], idx) => {
+                {topPatterns.map(([pattern, count]) => {
                   const maxCount = topPatterns[0][1];
                   const percentage = (count / maxCount) * 100;
                   return (
                     <div key={pattern}>
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-sm font-medium capitalize">{pattern}</span>
+                        <span className="text-sm font-medium">{getPatternLabel(pattern)}</span>
                         <span className="text-xs text-text/50">{count}x</span>
                       </div>
                       <div className="w-full h-2 bg-border rounded-full overflow-hidden">
@@ -247,7 +256,7 @@ export default function Dashboard({ onBack }: DashboardProps) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
           className={`mt-8 rounded-2xl p-6 border ${
-            user.plan === 'premium'
+            user.tier === 'premium'
               ? 'bg-gradient-to-br from-premium/5 to-accent/5 border-premium/20'
               : 'bg-white border-border'
           }`}
@@ -255,7 +264,7 @@ export default function Dashboard({ onBack }: DashboardProps) {
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-semibold flex items-center gap-2">
-                {user.plan === 'premium' ? (
+                {user.tier === 'premium' ? (
                   <>
                     <Crown className="w-5 h-5 text-premium" />
                     Plan Premium
@@ -263,23 +272,23 @@ export default function Dashboard({ onBack }: DashboardProps) {
                 ) : (
                   <>
                     <Sparkles className="w-5 h-5 text-accent" />
-                    Plan {user.plan === 'free' ? 'Gratuito' : 'Invitado'}
+                    Plan {user.tier === 'free' ? 'Gratuito' : 'Invitado'}
                   </>
                 )}
               </h3>
               <p className="text-sm text-text/60 mt-1">
-                {user.plan === 'premium'
-                  ? 'Tienes acceso completo a todos los patrones y formatos.'
-                  : user.plan === 'free'
-                    ? '10 descargas diarias • 7 patrones • PNG y SVG'
-                    : '3 descargas diarias • 6 patrones básicos • PNG baja resolución'
+                {user.tier === 'premium'
+                  ? 'Acceso completo: 12 patrones, exportación ilimitada, todas las resoluciones.'
+                  : user.tier === 'free'
+                    ? '10 descargas diarias • 8 patrones (ultra-básicos + básicos) • PNG hasta 1200px'
+                    : '3 descargas diarias • 3 patrones ultra-básicos • PNG 600px'
                 }
               </p>
             </div>
-            {user.plan !== 'premium' && (
+            {user.tier !== 'premium' && (
               <button
                 onClick={onBack}
-                className="px-4 py-2 bg-gradient-to-r from-premium to-accent text-white text-sm font-medium rounded-xl hover:opacity-90 transition-all"
+                className="px-4 py-2 bg-gradient-to-r from-premium to-accent text-white text-sm font-medium rounded-xl hover:opacity-90 transition-all shrink-0 ml-4"
               >
                 Upgrade
               </button>

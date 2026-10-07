@@ -1,6 +1,6 @@
 import { PatternConfig } from '../lib/patterns';
 import PatternSelector from './PatternSelector';
-import { UserPlan } from '../lib/userTier';
+import { UserTier } from '../lib/userTier';
 import { Shuffle, RotateCcw } from 'lucide-react';
 
 interface ControlsProps {
@@ -8,20 +8,31 @@ interface ControlsProps {
   onChange: (config: PatternConfig) => void;
   onRandomize: () => void;
   onReset: () => void;
-  plan: UserPlan;
+  tier: UserTier;
   onPremiumClick: () => void;
 }
 
-const PRESET_PALETTES = [
-  { name: 'Océano', colors: ['#2563EB', '#06B6D4', '#0EA5E9', '#3B82F6', '#1D4ED8'] },
-  { name: 'Bosque', colors: ['#10B981', '#059669', '#34D399', '#047857', '#6EE7B7'] },
-  { name: 'Atardecer', colors: ['#F59E0B', '#EF4444', '#EC4899', '#F97316', '#FB923C'] },
-  { name: 'Noche', colors: ['#8B5CF6', '#6366F1', '#A78BFA', '#7C3AED', '#4F46E5'] },
-  { name: 'Pastel', colors: ['#FCA5A5', '#FCD34D', '#86EFAC', '#93C5FD', '#C4B5FD'] },
-  { name: 'Neón', colors: ['#FF006E', '#FB5607', '#FFBE0B', '#3A86FF', '#8338EC'] },
+const PRESET_COLORS = [
+  { name: 'Azul', color: '#2563EB' },
+  { name: 'Púrpura', color: '#8B5CF6' },
+  { name: 'Rosa', color: '#EC4899' },
+  { name: 'Verde', color: '#10B981' },
+  { name: 'Ámbar', color: '#F59E0B' },
+  { name: 'Rojo', color: '#EF4444' },
+  { name: 'Cian', color: '#06B6D4' },
+  { name: 'Negro', color: '#1A1A1A' },
 ];
 
-export default function Controls({ config, onChange, onRandomize, onReset, plan, onPremiumClick }: ControlsProps) {
+const PRESET_BG = [
+  { name: 'Blanco', color: '#FAFAFA' },
+  { name: 'Crema', color: '#FEF3C7' },
+  { name: 'Lavanda', color: '#EDE9FE' },
+  { name: 'Menta', color: '#D1FAE5' },
+  { name: 'Rosa claro', color: '#FCE7F3' },
+  { name: 'Oscuro', color: '#1A1A1A' },
+];
+
+export default function Controls({ config, onChange, onRandomize, onReset, tier, onPremiumClick }: ControlsProps) {
   const update = (partial: Partial<PatternConfig>) => {
     onChange({ ...config, ...partial });
   };
@@ -31,62 +42,83 @@ export default function Controls({ config, onChange, onRandomize, onReset, plan,
       <PatternSelector
         selected={config.type}
         onSelect={(type) => update({ type })}
-        plan={plan}
+        tier={tier}
         onPremiumClick={onPremiumClick}
       />
 
-      {/* Color Palettes */}
+      {/* Color */}
       <div className="space-y-3">
-        <h3 className="text-sm font-semibold text-text/70 uppercase tracking-wider">Paleta de Colores</h3>
-        <div className="grid grid-cols-2 gap-2">
-          {PRESET_PALETTES.map((palette) => {
-            const isActive = JSON.stringify(palette.colors) === JSON.stringify(config.colors);
+        <h3 className="text-sm font-semibold text-text/70 uppercase tracking-wider">Color del Patrón</h3>
+        <div className="flex flex-wrap gap-2">
+          {PRESET_COLORS.map((preset) => {
+            const isActive = config.color === preset.color;
             return (
               <button
-                key={palette.name}
-                onClick={() => update({ colors: palette.colors })}
-                className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-all ${
-                  isActive
-                    ? 'bg-accent-light border-2 border-accent'
-                    : 'bg-white border border-border hover:border-accent/30'
+                key={preset.color}
+                onClick={() => update({ color: preset.color })}
+                className={`w-9 h-9 rounded-full border-2 transition-all ${
+                  isActive ? 'border-accent scale-110 shadow-md' : 'border-transparent hover:scale-105'
                 }`}
-              >
-                <div className="flex -space-x-1">
-                  {palette.colors.slice(0, 4).map((c, i) => (
-                    <div
-                      key={i}
-                      className="w-4 h-4 rounded-full border border-white"
-                      style={{ backgroundColor: c }}
-                    />
-                  ))}
-                </div>
-                <span className="text-xs font-medium text-text/70">{palette.name}</span>
-              </button>
+                style={{ backgroundColor: preset.color }}
+                title={preset.name}
+              />
             );
           })}
+          {/* Custom color input */}
+          <div className="relative">
+            <input
+              type="color"
+              value={config.color}
+              onChange={(e) => update({ color: e.target.value })}
+              className="w-9 h-9 rounded-full cursor-pointer border-2 border-border overflow-hidden"
+              title="Color personalizado"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Background Color */}
+      <div className="space-y-3">
+        <h3 className="text-sm font-semibold text-text/70 uppercase tracking-wider">Color de Fondo</h3>
+        <div className="flex flex-wrap gap-2">
+          {PRESET_BG.map((preset) => {
+            const isActive = config.backgroundColor === preset.color;
+            return (
+              <button
+                key={preset.color}
+                onClick={() => update({ backgroundColor: preset.color })}
+                className={`w-9 h-9 rounded-full border-2 transition-all ${
+                  isActive ? 'border-accent scale-110 shadow-md' : 'border-border hover:scale-105'
+                }`}
+                style={{ backgroundColor: preset.color }}
+                title={preset.name}
+              />
+            );
+          })}
+          <div className="relative">
+            <input
+              type="color"
+              value={config.backgroundColor}
+              onChange={(e) => update({ backgroundColor: e.target.value })}
+              className="w-9 h-9 rounded-full cursor-pointer border-2 border-border overflow-hidden"
+              title="Fondo personalizado"
+            />
+          </div>
         </div>
       </div>
 
       {/* Sliders */}
       <div className="space-y-4">
-        <h3 className="text-sm font-semibold text-text/70 uppercase tracking-wider">Ajustes</h3>
+        <h3 className="text-sm font-semibold text-text/70 uppercase tracking-wider">Parámetros</h3>
 
         <div className="space-y-3">
           <SliderControl
             label="Densidad"
             value={config.density}
-            min={1}
-            max={10}
+            min={0}
+            max={100}
             step={1}
             onChange={(v) => update({ density: v })}
-          />
-          <SliderControl
-            label="Escala"
-            value={config.scale}
-            min={0.5}
-            max={3}
-            step={0.1}
-            onChange={(v) => update({ scale: v })}
           />
           <SliderControl
             label="Rotación"
@@ -98,39 +130,14 @@ export default function Controls({ config, onChange, onRandomize, onReset, plan,
             suffix="°"
           />
           <SliderControl
-            label="Opacidad"
-            value={config.opacity}
-            min={0.1}
-            max={1}
-            step={0.05}
-            onChange={(v) => update({ opacity: v })}
-          />
-          <SliderControl
-            label="Grosor"
-            value={config.strokeWidth}
+            label="Escala"
+            value={config.scale}
             min={0.5}
-            max={5}
-            step={0.5}
-            onChange={(v) => update({ strokeWidth: v })}
+            max={2.0}
+            step={0.1}
+            onChange={(v) => update({ scale: v })}
           />
         </div>
-      </div>
-
-      {/* Toggle */}
-      <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-border">
-        <span className="text-sm font-medium text-text/80">Relleno sólido</span>
-        <button
-          onClick={() => update({ filled: !config.filled })}
-          className={`w-12 h-6 rounded-full transition-all duration-200 ${
-            config.filled ? 'bg-accent' : 'bg-border'
-          }`}
-        >
-          <div
-            className={`w-5 h-5 rounded-full bg-white shadow-sm transition-transform duration-200 ${
-              config.filled ? 'translate-x-6' : 'translate-x-0.5'
-            }`}
-          />
-        </button>
       </div>
 
       {/* Action Buttons */}
@@ -177,7 +184,7 @@ function SliderControl({ label, value, min, max, step, onChange, suffix = '' }: 
         onChange={(e) => onChange(parseFloat(e.target.value))}
         className="flex-1 h-2 bg-border rounded-full appearance-none cursor-pointer accent-accent"
       />
-      <span className="text-sm font-mono text-text/50 w-12 text-right">
+      <span className="text-sm font-mono text-text/50 w-14 text-right">
         {typeof value === 'number' && value % 1 !== 0 ? value.toFixed(1) : value}{suffix}
       </span>
     </div>

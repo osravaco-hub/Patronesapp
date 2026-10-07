@@ -1,13 +1,14 @@
-import { X, Check, Crown, Zap, Shield } from 'lucide-react';
+import { X, Crown, Zap, Shield } from 'lucide-react';
+import { UserTier } from '../lib/userTier';
 
 interface PricingModalProps {
   isOpen: boolean;
   onClose: () => void;
   onUpgrade: () => void;
-  currentPlan: 'guest' | 'free' | 'premium';
+  currentTier: UserTier;
 }
 
-export default function PricingModal({ isOpen, onClose, onUpgrade, currentPlan }: PricingModalProps) {
+export default function PricingModal({ isOpen, onClose, onUpgrade, currentTier }: PricingModalProps) {
   if (!isOpen) return null;
 
   return (
@@ -41,7 +42,7 @@ export default function PricingModal({ isOpen, onClose, onUpgrade, currentPlan }
               Desbloquea Premium
             </h2>
             <p className="text-text/60 mt-2">
-              Accede a todos los patrones y formatos de exportación
+              Accede a patrones avanzados y exportación ilimitada
             </p>
           </div>
 
@@ -49,18 +50,18 @@ export default function PricingModal({ isOpen, onClose, onUpgrade, currentPlan }
           <div className="space-y-4 mb-8">
             <FeatureItem
               icon={<Zap className="w-5 h-5 text-accent" />}
-              title="Patrones exclusivos"
-              description="Chevrons, Estrellas, Cruces, Zigzag y más"
+              title="Patrones avanzados"
+              description="Voronoi, Art Deco, Tessellation y Fractal Tree"
             />
             <FeatureItem
               icon={<Shield className="w-5 h-5 text-accent" />}
               title="Exportación ilimitada"
-              description="Descargas sin límite, cualquier formato"
+              description="Descargas sin límite, PNG hasta 2400px"
             />
             <FeatureItem
-              icon={<Crown className="w-5 h-5 text-premium" />}
-              title="Alta resolución"
-              description="PNG 2400px y PDF listo para impresión"
+              icon={<Crown className="w-5 h-7 text-premium" />}
+              title="Todos los patrones básicos"
+              description="Ondas, triángulos, espirales, cruces y rayas"
             />
           </div>
 
@@ -80,7 +81,7 @@ export default function PricingModal({ isOpen, onClose, onUpgrade, currentPlan }
             onClick={onUpgrade}
             className="w-full py-4 bg-gradient-to-r from-premium to-accent text-white font-semibold rounded-xl hover:opacity-90 transition-all shadow-lg shadow-premium/20"
           >
-            {currentPlan === 'premium' ? '✓ Ya eres Premium' : 'Activar Premium Gratis'}
+            {currentTier === 'premium' ? '✓ Ya eres Premium' : 'Activar Premium Gratis'}
           </button>
 
           <p className="text-center text-xs text-text/40 mt-4">

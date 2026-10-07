@@ -11,7 +11,7 @@ import {
   simulateLogin,
   simulatePremiumUpgrade,
   recordDownload,
-  resetDailyDownloads,
+  DOWNLOAD_LIMITS,
 } from '../lib/userTier';
 import { Sparkles, LogIn, Crown, Menu, X } from 'lucide-react';
 
@@ -29,6 +29,13 @@ export default function Landing({ onNavigateDashboard }: LandingProps) {
 
   const handleRandomize = useCallback(() => {
     setSeed(Math.floor(Math.random() * 100000));
+    // Also randomize config values
+    setConfig((prev) => ({
+      ...prev,
+      density: Math.floor(Math.random() * 100),
+      rotation: Math.floor(Math.random() * 360 / 5) * 5,
+      scale: Math.round((0.5 + Math.random() * 1.5) * 10) / 10,
+    }));
   }, []);
 
   const handleReset = useCallback(() => {
@@ -49,6 +56,11 @@ export default function Landing({ onNavigateDashboard }: LandingProps) {
     setUser(simulateLogin(email));
     setShowAuth(false);
   }, []);
+
+  const limit = DOWNLOAD_LIMITS[user.tier];
+  const remainingText = limit === Infinity
+    ? 'Descargas ilimitadas ✨'
+    : `${Math.max(0, limit - user.downloadsToday)} descargas restantes hoy`;
 
   return (
     <div className="min-h-screen bg-background">
@@ -149,7 +161,7 @@ export default function Landing({ onNavigateDashboard }: LandingProps) {
             </span>
           </h2>
           <p className="text-lg text-text/60 mt-6 max-w-xl mx-auto">
-            Crea patrones personalizados para tus proyectos de diseño. Exporta en múltiples formatos sin límites.
+            12 patrones desde círculos concéntricos hasta fractales. Personaliza colores, densidad y escala. Exporta sin límites.
           </p>
         </motion.div>
       </section>
@@ -165,30 +177,36 @@ export default function Landing({ onNavigateDashboard }: LandingProps) {
             transition={{ duration: 0.5, delay: 0.2 }}
           >
             <div className="sticky top-24">
-              <PatternCanvas config={config} seed={seed} width={600} height={600} />
+              <PatternCanvas
+                config={config}
+                seed={seed}
+                tier={user.tier}
+                width={600}
+                height={600}
+                onLockedClick={() => setShowPricing(true)}
+              />
 
               {/* Export section */}
               <div className="mt-6">
                 <ExportButton
                   config={config}
                   seed={seed}
-                  plan={user.plan}
+                  tier={user.tier}
                   downloadsToday={user.downloadsToday}
                   onDownload={handleDownload}
                   onPremiumClick={() => setShowPricing(true)}
                 />
-                {user.plan !== 'premium' && (
-                  <p className="text-center text-xs text-text/40 mt-3">
-                    {user.plan === 'guest'
-                      ? `${3 - user.downloadsToday} descargas gratuitas restantes`
-                      : `${10 - user.downloadsToday} descargas restantes hoy`
-                    }
-                    {' • '}
-                    <button onClick={() => setShowPricing(true)} className="text-premium hover:underline">
-                      Upgrade a Premium
-                    </button>
-                  </p>
-                )}
+                <p className="text-center text-xs text-text/40 mt-3">
+                  {remainingText}
+                  {user.tier !== 'premium' && (
+                    <>
+                      {' • '}
+                      <button onClick={() => setShowPricing(true)} className="text-premium hover:underline">
+                        Upgrade a Premium
+                      </button>
+                    </>
+                  )}
+                </p>
               </div>
             </div>
           </motion.div>
@@ -206,7 +224,7 @@ export default function Landing({ onNavigateDashboard }: LandingProps) {
                 onChange={setConfig}
                 onRandomize={handleRandomize}
                 onReset={handleReset}
-                plan={user.plan}
+                tier={user.tier}
                 onPremiumClick={() => setShowPricing(true)}
               />
             </div>
@@ -218,23 +236,29 @@ export default function Landing({ onNavigateDashboard }: LandingProps) {
       <section className="py-20 bg-white border-t border-border">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <h3 className="text-3xl font-bold text-center mb-12 font-[family-name:var(--font-display)]">
-            Todo lo que necesitas
+            12 patrones, 3 niveles
           </h3>
           <div className="grid sm:grid-cols-3 gap-8">
             <FeatureCard
-              emoji="🎨"
-              title="10 tipos de patrones"
-              description="Triángulos, hexágonos, círculos, diamantes, ondas y más."
+              emoji="◎"
+              title="Ultra-Básicos"
+              description="Círculos concéntricos, líneas diagonales y cuadrículas. Gratis para todos."
+              badge="Gratis"
+              badgeColor="bg-green-50 text-green-600"
             />
             <FeatureCard
-              emoji="⚡"
-              title="Exportación múltiple"
-              description="PNG en varias resoluciones, SVG vectorial y PDF."
+              emoji="∿"
+              title="Básicos"
+              description="Ondas, triángulos, espirales y cruces escandinavas. Al registrarte."
+              badge="Free"
+              badgeColor="bg-accent-light text-accent"
             />
             <FeatureCard
-              emoji="🎯"
-              title="Personalización total"
-              description="Colores, densidad, escala, rotación y opacidad ajustables."
+              emoji="⬡"
+              title="Avanzados"
+              description="Voronoi, Art Deco, teselados y fractales. Solo Premium."
+              badge="Premium"
+              badgeColor="bg-premium-light text-premium"
             />
           </div>
         </div>
@@ -252,10 +276,9 @@ export default function Landing({ onNavigateDashboard }: LandingProps) {
         isOpen={showPricing}
         onClose={() => setShowPricing(false)}
         onUpgrade={handleUpgrade}
-        currentPlan={user.plan}
+        currentTier={user.tier}
       />
 
-      {/* Auth Modal */}
       {showAuth && (
         <AuthModal
           onClose={() => setShowAuth(false)}
@@ -266,10 +289,15 @@ export default function Landing({ onNavigateDashboard }: LandingProps) {
   );
 }
 
-function FeatureCard({ emoji, title, description }: { emoji: string; title: string; description: string }) {
+function FeatureCard({ emoji, title, description, badge, badgeColor }: {
+  emoji: string; title: string; description: string; badge: string; badgeColor: string;
+}) {
   return (
     <div className="text-center p-6">
       <div className="text-4xl mb-4">{emoji}</div>
+      <span className={`inline-block text-xs font-medium px-2 py-0.5 rounded-full mb-3 ${badgeColor}`}>
+        {badge}
+      </span>
       <h4 className="font-semibold text-lg mb-2">{title}</h4>
       <p className="text-sm text-text/60">{description}</p>
     </div>
@@ -285,7 +313,7 @@ function AuthModal({ onClose, onLogin }: { onClose: () => void; onLogin: (email:
       <div className="relative bg-white rounded-2xl shadow-2xl max-w-sm w-full p-8">
         <h3 className="text-xl font-bold mb-2 font-[family-name:var(--font-display)]">Iniciar Sesión</h3>
         <p className="text-sm text-text/60 mb-6">
-          Ingresa tu email para guardar tus patrones y acceder al dashboard.
+          Ingresa tu email para desbloquear patrones básicos y acceder al dashboard.
         </p>
 
         <div className="space-y-4">

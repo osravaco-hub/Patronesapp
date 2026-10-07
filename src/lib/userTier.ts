@@ -1,41 +1,39 @@
-// User tier management (client-side simulation)
-export type UserPlan = 'guest' | 'free' | 'premium';
+// User tier management
+export type UserTier = 'guest' | 'free' | 'premium';
+
+export interface User {
+  id?: string;
+  email?: string | null;
+  plan?: 'free' | 'premium';
+  isLoggedIn?: boolean;
+}
+
+export function getUserTier(user: User | null | undefined): UserTier {
+  if (!user || !user.isLoggedIn) return 'guest';
+  if (user.plan === 'premium') return 'premium';
+  return 'free';
+}
 
 export interface UserState {
-  plan: UserPlan;
+  tier: UserTier;
   email: string | null;
   isLoggedIn: boolean;
   downloadsToday: number;
   totalDownloads: number;
 }
 
-export const DOWNLOAD_LIMITS: Record<UserPlan, number> = {
+export const DOWNLOAD_LIMITS: Record<UserTier, number> = {
   guest: 3,
   free: 10,
   premium: Infinity,
 };
 
-export const EXPORT_FORMATS: Record<UserPlan, string[]> = {
-  guest: ['png-low'],
-  free: ['png-low', 'png-high', 'svg'],
-  premium: ['png-low', 'png-high', 'svg', 'png-ultra', 'pdf'],
-};
-
-export function canUsePattern(plan: UserPlan, isPremiumPattern: boolean): boolean {
-  if (!isPremiumPattern) return true;
-  return plan === 'premium';
+export function canDownload(tier: UserTier, downloadsToday: number): boolean {
+  return downloadsToday < DOWNLOAD_LIMITS[tier];
 }
 
-export function canExport(plan: UserPlan, format: string): boolean {
-  return EXPORT_FORMATS[plan].includes(format);
-}
-
-export function canDownload(plan: UserPlan, downloadsToday: number): boolean {
-  return downloadsToday < DOWNLOAD_LIMITS[plan];
-}
-
-export function getRemainingDownloads(plan: UserPlan, downloadsToday: number): number {
-  const limit = DOWNLOAD_LIMITS[plan];
+export function getRemainingDownloads(tier: UserTier, downloadsToday: number): number {
+  const limit = DOWNLOAD_LIMITS[tier];
   if (limit === Infinity) return Infinity;
   return Math.max(0, limit - downloadsToday);
 }
@@ -50,7 +48,7 @@ export function getDefaultUser(): UserState {
     }
   }
   return {
-    plan: 'guest',
+    tier: 'guest',
     email: null,
     isLoggedIn: false,
     downloadsToday: 0,
@@ -64,7 +62,7 @@ export function saveUser(user: UserState) {
 
 export function simulateLogin(email: string): UserState {
   const user: UserState = {
-    plan: 'free',
+    tier: 'free',
     email,
     isLoggedIn: true,
     downloadsToday: 0,
@@ -75,7 +73,7 @@ export function simulateLogin(email: string): UserState {
 }
 
 export function simulatePremiumUpgrade(user: UserState): UserState {
-  const updated = { ...user, plan: 'premium' as UserPlan };
+  const updated = { ...user, tier: 'premium' as UserTier };
   saveUser(updated);
   return updated;
 }
@@ -86,12 +84,6 @@ export function recordDownload(user: UserState): UserState {
     downloadsToday: user.downloadsToday + 1,
     totalDownloads: user.totalDownloads + 1,
   };
-  saveUser(updated);
-  return updated;
-}
-
-export function resetDailyDownloads(user: UserState): UserState {
-  const updated = { ...user, downloadsToday: 0 };
   saveUser(updated);
   return updated;
 }
