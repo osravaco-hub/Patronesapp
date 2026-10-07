@@ -119,6 +119,10 @@ export function generatePattern(
 ) {
   const { type, color, backgroundColor, density, rotation, scale } = config;
 
+  // Generate pattern at 2x size to ensure it fills the canvas when rotated
+  const patternWidth = width * 2;
+  const patternHeight = height * 2;
+
   // Clear and fill background
   ctx.clearRect(0, 0, width, height);
   ctx.fillStyle = backgroundColor;
@@ -128,47 +132,48 @@ export function generatePattern(
   ctx.save();
   ctx.translate(width / 2, height / 2);
   ctx.rotate((rotation * Math.PI) / 180);
-  ctx.translate(-width / 2, -height / 2);
+  // Offset to center the larger pattern
+  ctx.translate(-patternWidth / 2, -patternHeight / 2);
 
   ctx.strokeStyle = color;
   ctx.fillStyle = color;
 
   switch (type) {
     case 'concentricCircles':
-      drawConcentricCircles(ctx, width, height, color, density, scale);
+      drawConcentricCircles(ctx, patternWidth, patternHeight, color, density, scale);
       break;
     case 'diagonalLines':
-      drawDiagonalLines(ctx, width, height, color, density, scale);
+      drawDiagonalLines(ctx, patternWidth, patternHeight, color, density, scale);
       break;
     case 'dotGrid':
-      drawDotGrid(ctx, width, height, color, density, scale);
+      drawDotGrid(ctx, patternWidth, patternHeight, color, density, scale);
       break;
     case 'wavyLines':
-      drawWavyLines(ctx, width, height, color, density, scale);
+      drawWavyLines(ctx, patternWidth, patternHeight, color, density, scale);
       break;
     case 'triangleGrid':
-      drawTriangleGrid(ctx, width, height, color, density, scale);
+      drawTriangleGrid(ctx, patternWidth, patternHeight, color, density, scale);
       break;
     case 'squareSpiral':
-      drawSquareSpiral(ctx, width, height, color, density, scale);
+      drawSquareSpiral(ctx, patternWidth, patternHeight, color, density, scale);
       break;
     case 'scandinavianCross':
-      drawScandinavianCross(ctx, width, height, color, density, scale);
+      drawScandinavianCross(ctx, patternWidth, patternHeight, color, density, scale);
       break;
     case 'verticalStripes':
-      drawVerticalStripes(ctx, width, height, color, density, scale);
+      drawVerticalStripes(ctx, patternWidth, patternHeight, color, density, scale);
       break;
     case 'voronoi':
-      drawVoronoi(ctx, width, height, color, backgroundColor, density, scale, seed);
+      drawVoronoi(ctx, patternWidth, patternHeight, color, backgroundColor, density, scale, seed);
       break;
     case 'artDeco':
-      drawArtDeco(ctx, width, height, color, density, scale);
+      drawArtDeco(ctx, patternWidth, patternHeight, color, density, scale);
       break;
     case 'tessellation':
-      drawTessellation(ctx, width, height, color, density, scale);
+      drawTessellation(ctx, patternWidth, patternHeight, color, density, scale);
       break;
     case 'fractalTree':
-      drawFractalTree(ctx, width, height, color, density, scale);
+      drawFractalTree(ctx, patternWidth, patternHeight, color, density, scale);
       break;
   }
 
@@ -570,50 +575,58 @@ export function generateSVG(
   const { type, color, backgroundColor, density, rotation, scale } = config;
   const bgColor = transparentBackground ? 'none' : backgroundColor;
 
+  // Generate pattern at 2x size to ensure it fills the canvas when rotated
+  const patternWidth = width * 2;
+  const patternHeight = height * 2;
+
   let patternContent = '';
   switch (type) {
     case 'concentricCircles':
-      patternContent = svgConcentricCircles(width, height, color, density, scale);
+      patternContent = svgConcentricCircles(patternWidth, patternHeight, color, density, scale);
       break;
     case 'diagonalLines':
-      patternContent = svgDiagonalLines(width, height, color, density, scale);
+      patternContent = svgDiagonalLines(patternWidth, patternHeight, color, density, scale);
       break;
     case 'dotGrid':
-      patternContent = svgDotGrid(width, height, color, density, scale);
+      patternContent = svgDotGrid(patternWidth, patternHeight, color, density, scale);
       break;
     case 'wavyLines':
-      patternContent = svgWavyLines(width, height, color, density, scale);
+      patternContent = svgWavyLines(patternWidth, patternHeight, color, density, scale);
       break;
     case 'triangleGrid':
-      patternContent = svgTriangleGrid(width, height, color, density, scale);
+      patternContent = svgTriangleGrid(patternWidth, patternHeight, color, density, scale);
       break;
     case 'squareSpiral':
-      patternContent = svgSquareSpiral(width, height, color, density, scale);
+      patternContent = svgSquareSpiral(patternWidth, patternHeight, color, density, scale);
       break;
     case 'scandinavianCross':
-      patternContent = svgScandinavianCross(width, height, color, density, scale);
+      patternContent = svgScandinavianCross(patternWidth, patternHeight, color, density, scale);
       break;
     case 'verticalStripes':
-      patternContent = svgVerticalStripes(width, height, color, density, scale);
+      patternContent = svgVerticalStripes(patternWidth, patternHeight, color, density, scale);
       break;
     case 'voronoi':
-      patternContent = svgVoronoi(width, height, color, density, scale, seed);
+      patternContent = svgVoronoi(patternWidth, patternHeight, color, density, scale, seed);
       break;
     case 'artDeco':
-      patternContent = svgArtDeco(width, height, color, density, scale);
+      patternContent = svgArtDeco(patternWidth, patternHeight, color, density, scale);
       break;
     case 'tessellation':
-      patternContent = svgTessellation(width, height, color, density, scale);
+      patternContent = svgTessellation(patternWidth, patternHeight, color, density, scale);
       break;
     case 'fractalTree':
-      patternContent = svgFractalTree(width, height, color, density, scale);
+      patternContent = svgFractalTree(patternWidth, patternHeight, color, density, scale);
       break;
   }
+
+  // Calculate offset to center the larger pattern
+  const offsetX = (patternWidth - width) / 2;
+  const offsetY = (patternHeight - height) / 2;
 
   const svg = `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
   <rect width="${width}" height="${height}" fill="${bgColor}"/>
-  <g transform="rotate(${rotation} ${width / 2} ${height / 2})">
+  <g transform="translate(-${offsetX}, -${offsetY}) rotate(${rotation} ${patternWidth / 2} ${patternHeight / 2})">
     ${patternContent}
   </g>
 </svg>`;
