@@ -173,7 +173,7 @@ export function generatePattern(
       drawTessellation(ctx, patternWidth, patternHeight, color, density, scale);
       break;
     case 'fractalTree':
-      drawFractalTree(ctx, patternWidth, patternHeight, color, density, scale);
+      drawFractalTree(ctx, width, height, color, density, scale);
       break;
   }
 
@@ -194,7 +194,8 @@ function drawConcentricCircles(
   const cy = h / 2;
   // Make the pattern fill the entire canvas
   const maxRadius = Math.max(w, h) * 0.8 * scale;
-  const numCircles = Math.max(3, Math.floor(5 + (density / 100) * 25));
+  // Mayor rango de densidad: de 5 a 80 círculos
+  const numCircles = Math.max(5, Math.floor(5 + (density / 100) * 75));
   const spacing = maxRadius / numCircles;
 
   ctx.strokeStyle = color;
@@ -322,7 +323,8 @@ function drawSquareSpiral(
 ) {
   const cx = w / 2;
   const cy = h / 2;
-  const maxSteps = Math.max(10, Math.floor(20 + (density / 100) * 60));
+  // Mayor rango de densidad: de 20 a 200 pasos
+  const maxSteps = Math.max(20, Math.floor(20 + (density / 100) * 180));
   const stepSize = Math.max(4, 12 * scale);
 
   ctx.strokeStyle = color;
@@ -615,7 +617,7 @@ export function generateSVG(
       patternContent = svgTessellation(patternWidth, patternHeight, color, density, scale);
       break;
     case 'fractalTree':
-      patternContent = svgFractalTree(patternWidth, patternHeight, color, density, scale);
+      patternContent = svgFractalTree(width, height, color, density, scale);
       break;
   }
 
@@ -638,7 +640,8 @@ function svgConcentricCircles(w: number, h: number, color: string, density: numb
   const cx = w / 2;
   const cy = h / 2;
   const maxRadius = Math.max(w, h) * 0.8 * scale;
-  const numCircles = Math.max(3, Math.floor(5 + (density / 100) * 25));
+  // Mayor rango de densidad: de 5 a 80 círculos
+  const numCircles = Math.max(5, Math.floor(5 + (density / 100) * 75));
   const spacing = maxRadius / numCircles;
   const strokeWidth = Math.max(1, 2 * scale);
 
@@ -717,7 +720,8 @@ function svgTriangleGrid(w: number, h: number, color: string, density: number, s
 function svgSquareSpiral(w: number, h: number, color: string, density: number, scale: number): string {
   const cx = w / 2;
   const cy = h / 2;
-  const maxSteps = Math.max(10, Math.floor(20 + (density / 100) * 60));
+  // Mayor rango de densidad: de 20 a 200 pasos
+  const maxSteps = Math.max(20, Math.floor(20 + (density / 100) * 180));
   const stepSize = Math.max(4, 12 * scale);
   const strokeWidth = Math.max(1, 2 * scale);
 
