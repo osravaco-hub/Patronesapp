@@ -28,8 +28,6 @@ export interface PatternConfig {
   rotation: number; // 0-360
   scale: number; // 0.5-2.0
   tilePattern: boolean; // Repetir patrón en cuadrícula
-  tileCount: number; // Cantidad de repeticiones (1-10)
-  randomTileRotation: boolean; // Aleatorizar rotación de cada tile
 }
 
 export interface PatternDefinition {
@@ -66,8 +64,6 @@ export const defaultConfig: PatternConfig = {
   rotation: 0,
   scale: 1.0,
   tilePattern: false,
-  tileCount: 3,
-  randomTileRotation: false,
 };
 
 /**
@@ -123,7 +119,7 @@ export function generatePattern(
   config: PatternConfig,
   seed: number = 42
 ) {
-  const { type, color, backgroundColor, density, rotation, scale, tilePattern, tileCount, randomTileRotation } = config;
+  const { type, color, backgroundColor, density, rotation, scale, tilePattern } = config;
 
   // Clear and fill background
   ctx.clearRect(0, 0, width, height);
@@ -134,36 +130,23 @@ export function generatePattern(
   ctx.fillStyle = color;
 
   if (tilePattern) {
-    // Tile mode: repeat pattern in a grid based on tileCount
+    // Tile mode: repeat pattern in a grid
     const tileSize = calculateTileSize(type, density, scale);
-    const cols = tileCount;
-    const rows = tileCount;
-    const totalWidth = cols * tileSize;
-    const totalHeight = rows * tileSize;
+    const cols = Math.ceil(width / tileSize) + 2;
+    const rows = Math.ceil(height / tileSize) + 2;
 
-    // Apply global rotation around center
+    // Apply rotation around center
     ctx.save();
     ctx.translate(width / 2, height / 2);
     ctx.rotate((rotation * Math.PI) / 180);
-    ctx.translate(-totalWidth / 2, -totalHeight / 2);
-
-    // Initialize random number generator for consistent random rotations
-    const rand = seededRandom(seed);
+    ctx.translate(-(cols * tileSize) / 2, -(rows * tileSize) / 2);
 
     // Draw pattern in each tile
     for (let row = 0; row < rows; row++) {
       for (let col = 0; col < cols; col++) {
         ctx.save();
-        ctx.translate(col * tileSize + tileSize / 2, row * tileSize + tileSize / 2);
-        
-        // Apply random rotation to each tile if enabled
-        if (randomTileRotation) {
-          const randomAngle = rand() * 360;
-          ctx.rotate((randomAngle * Math.PI) / 180);
-        }
-        
-        ctx.translate(-tileSize / 2, -tileSize / 2);
-        drawSinglePattern(ctx, type, tileSize, tileSize, color, backgroundColor, density, scale, seed + row * cols + col);
+        ctx.translate(col * tileSize, row * tileSize);
+        drawSinglePattern(ctx, type, tileSize, tileSize, color, backgroundColor, density, scale, seed);
         ctx.restore();
       }
     }
@@ -654,46 +637,33 @@ export function generateSVG(
   seed: number = 42,
   transparentBackground: boolean = false
 ): string {
-  const { type, color, backgroundColor, density, rotation, scale, tilePattern, tileCount, randomTileRotation } = config;
+  const { type, color, backgroundColor, density, rotation, scale, tilePattern } = config;
   const bgColor = transparentBackground ? 'none' : backgroundColor;
 
   let patternContent = '';
   let transformAttr = '';
 
   if (tilePattern) {
-    // Tile mode: repeat pattern in a grid based on tileCount
+    // Tile mode: repeat pattern in a grid
     const tileSize = calculateTileSize(type, density, scale);
-    const cols = tileCount;
-    const rows = tileCount;
-    const totalWidth = cols * tileSize;
-    const totalHeight = rows * tileSize;
+    const cols = Math.ceil(width / tileSize) + 2;
+    const rows = Math.ceil(height / tileSize) + 2;
 
-    // Generate tiles with optional random rotation
-    const rand = seededRandom(seed);
-    let tilesSvg = '';
-
-    for (let row = 0; row < rows; row++) {
-      for (let col = 0; col < cols; col++) {
-        const singlePattern = generateSingleSVGPattern(type, tileSize, tileSize, color, density, scale, seed + row * cols + col);
-        const x = col * tileSize;
-        const y = row * tileSize;
-        
-        let tileTransform = `translate(${x + tileSize / 2}, ${y + tileSize / 2})`;
-        
-        if (randomTileRotation) {
-          const randomAngle = rand() * 360;
-          tileTransform += ` rotate(${randomAngle})`;
-        }
-        
-        tileTransform += ` translate(${-tileSize / 2}, ${-tileSize / 2})`;
-        
-        tilesSvg += `<g transform="${tileTransform}">${singlePattern}</g>`;
-      }
-    }
-
-    patternContent = tilesSvg;
+    // Generate SVG pattern definition for efficient tiling
+    const singlePattern = generateSingleSVGPattern(type, tileSize, tileSize, color, density, scale, seed);
+    
+    patternContent = `
+    <defs>
+      <pattern id="tilePattern" x="0" y="0" width="${tileSize}" height="${tileSize}" patternUnits="userSpaceOnUse">
+        ${singlePattern}
+      </pattern>
+    </defs>
+    <rect width="${cols * tileSize}" height="${rows * tileSize}" fill="url(#tilePattern)"/>
+    `;
 
     // Calculate offset to center the tiled pattern
+    const totalWidth = cols * tileSize;
+    const totalHeight = rows * tileSize;
     const offsetX = (totalWidth - width) / 2;
     const offsetY = (totalHeight - height) / 2;
 
