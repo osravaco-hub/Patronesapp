@@ -175,23 +175,59 @@ export default function Controls({ config, onChange, onRandomize, onReset, tier,
       </div>
 
       {/* Pattern Tiling Toggle - All tiers */}
-      <div className="flex items-center justify-between p-3 bg-background rounded-xl border border-border">
-        <div className="flex items-center gap-2">
-          <Grid className="w-4 h-4 text-text/60" />
-          <span className="text-sm font-medium text-text/80">Repetir Patrón</span>
-        </div>
-        <button
-          onClick={() => update({ tilePattern: !config.tilePattern })}
-          className={`w-12 h-6 rounded-full transition-all duration-200 ${
-            config.tilePattern ? 'bg-accent' : 'bg-border'
-          }`}
-        >
-          <div
-            className={`w-5 h-5 rounded-full bg-white shadow-sm transition-transform duration-200 ${
-              config.tilePattern ? 'translate-x-6' : 'translate-x-0.5'
+      <div className="space-y-3">
+        <div className="flex items-center justify-between p-3 bg-background rounded-xl border border-border">
+          <div className="flex items-center gap-2">
+            <Grid className="w-4 h-4 text-text/60" />
+            <span className="text-sm font-medium text-text/80">Repetir Patrón</span>
+          </div>
+          <button
+            onClick={() => update({ tilePattern: !config.tilePattern })}
+            className={`w-12 h-6 rounded-full transition-all duration-200 ${
+              config.tilePattern ? 'bg-accent' : 'bg-border'
             }`}
-          />
-        </button>
+          >
+            <div
+              className={`w-5 h-5 rounded-full bg-white shadow-sm transition-transform duration-200 ${
+                config.tilePattern ? 'translate-x-6' : 'translate-x-0.5'
+              }`}
+            />
+          </button>
+        </div>
+
+        {/* Tile Count Slider - Only visible when tilePattern is enabled */}
+        {config.tilePattern && (
+          <div className="space-y-2 pl-2 border-l-2 border-accent/20">
+            <SliderControl
+              label="Cantidad"
+              value={config.tileCount}
+              min={1}
+              max={10}
+              step={1}
+              onChange={(v) => update({ tileCount: v })}
+            />
+
+            {/* Random Tile Rotation Toggle */}
+            <div className="flex items-center justify-between p-2 bg-background/50 rounded-lg">
+              <div className="flex items-center gap-2">
+                <RotateCcw className="w-3.5 h-3.5 text-text/60" />
+                <span className="text-xs font-medium text-text/70">Rotación Aleatoria</span>
+              </div>
+              <button
+                onClick={() => update({ randomTileRotation: !config.randomTileRotation })}
+                className={`w-10 h-5 rounded-full transition-all duration-200 ${
+                  config.randomTileRotation ? 'bg-accent' : 'bg-border'
+                }`}
+              >
+                <div
+                  className={`w-4 h-4 rounded-full bg-white shadow-sm transition-transform duration-200 ${
+                    config.randomTileRotation ? 'translate-x-5' : 'translate-x-0.5'
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Premium Features */}
