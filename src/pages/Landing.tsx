@@ -60,7 +60,7 @@ export default function Landing({ onNavigateDashboard }: LandingProps) {
   const limit = DOWNLOAD_LIMITS[user.tier];
   const remainingText = limit === Infinity
     ? 'Descargas ilimitadas ✨'
-    : `${Math.max(0, limit - user.downloadsToday)} descargas restantes hoy`;
+    : `${Math.max(0, limit - user.downloadsToday)} descargas restantes esta semana`;
 
   return (
     <div className="min-h-screen bg-background">
@@ -277,6 +277,10 @@ export default function Landing({ onNavigateDashboard }: LandingProps) {
         onClose={() => setShowPricing(false)}
         onUpgrade={handleUpgrade}
         currentTier={user.tier}
+        onLogin={() => {
+          setShowPricing(false);
+          setShowAuth(true);
+        }}
       />
 
       {showAuth && (

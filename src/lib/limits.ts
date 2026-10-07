@@ -1,5 +1,5 @@
-// Download limits and tracking
-import { UserTier, DOWNLOAD_LIMITS } from './userTier';
+// Weekly download limits and tracking
+import { UserTier } from './userTier';
 
 export interface DownloadRecord {
   id: string;
@@ -7,6 +7,13 @@ export interface DownloadRecord {
   format: string;
   timestamp: number;
 }
+
+// Weekly limits by tier
+export const WEEKLY_LIMITS: Record<UserTier, number> = {
+  guest: Infinity, // unlimited but only ultra-basic patterns
+  free: 3,
+  premium: Infinity,
+};
 
 export function getDownloadHistory(): DownloadRecord[] {
   const stored = localStorage.getItem('geopattern_downloads');
@@ -29,9 +36,34 @@ export function addDownloadRecord(patternType: string, format: string): Download
   };
   const history = getDownloadHistory();
   history.unshift(record);
-  const trimmed = history.slice(0, 100);
+  // Keep only last 200 records
+  const trimmed = history.slice(0, 200);
   localStorage.setItem('geopattern_downloads', JSON.stringify(trimmed));
   return record;
+}
+
+export function getWeeklyDownloads(userId?: string): number {
+  const history = getDownloadHistory();
+  const now = Date.now();
+  const sevenDaysAgo = now - 7 * 24 * 60 * 60 * 1000;
+  
+  return history.filter((r) => r.timestamp >= sevenDaysAgo).length;
+}
+
+export function canDownload(userId: string | undefined, tier: UserTier): { allowed: boolean; remaining: number } {
+  const limit = WEEKLY_LIMITS[tier];
+  
+  if (limit === Infinity) {
+    return { allowed: true, remaining: Infinity };
+  }
+  
+  const used = getWeeklyDownloads(userId);
+  const remaining = Math.max(0, limit - used);
+  
+  return {
+    allowed: remaining > 0,
+    remaining,
+  };
 }
 
 export function getTodayDownloads(): number {
@@ -42,16 +74,22 @@ export function getTodayDownloads(): number {
 }
 
 export function isLimitReached(tier: UserTier): boolean {
-  const limit = DOWNLOAD_LIMITS[tier];
+  const limit = WEEKLY_LIMITS[tier];
   if (limit === Infinity) return false;
-  return getTodayDownloads() >= limit;
+  return getWeeklyDownloads() >= limit;
 }
 
 export function getLimitInfo(tier: UserTier): { used: number; limit: number | string; percentage: number } {
-  const limit = DOWNLOAD_LIMITS[tier];
-  const used = getTodayDownloads();
+  const limit = WEEKLY_LIMITS[tier];
+  const used = getWeeklyDownloads();
+  
   if (limit === Infinity) {
     return { used, limit: '∞', percentage: 0 };
   }
-  return { used, limit, percentage: Math.min(100, (used / limit) * 100) };
+  
+  return { 
+    used, 
+    limit, 
+    percentage: Math.min(100, (used / limit) * 100) 
+  };
 }

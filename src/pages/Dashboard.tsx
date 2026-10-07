@@ -157,8 +157,8 @@ export default function Dashboard({ onBack }: DashboardProps) {
           </div>
           <p className="text-xs text-text/50 mt-2">
             {limitInfo.limit === '∞'
-              ? 'Tienes descargas ilimitadas con Premium ✨'
-              : `${limitInfo.used} de ${limitInfo.limit} descargas usadas hoy`
+              ? 'Tienes descargas ilimitadas ✨'
+              : `${limitInfo.used} de ${limitInfo.limit} descargas usadas esta semana`
             }
           </p>
         </motion.div>
@@ -280,8 +280,8 @@ export default function Dashboard({ onBack }: DashboardProps) {
                 {user.tier === 'premium'
                   ? 'Acceso completo: 12 patrones, exportación ilimitada, todas las resoluciones.'
                   : user.tier === 'free'
-                    ? '10 descargas diarias • 8 patrones (ultra-básicos + básicos) • PNG hasta 1200px'
-                    : '3 descargas diarias • 3 patrones ultra-básicos • PNG 600px'
+                    ? '3 descargas/semana • 8 patrones (ultra-básicos + básicos) • PNG hasta 1200px'
+                    : 'Descargas ilimitadas • 3 patrones ultra-básicos • PNG 600px'
                 }
               </p>
             </div>

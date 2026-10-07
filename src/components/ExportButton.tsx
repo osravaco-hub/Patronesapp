@@ -1,8 +1,8 @@
 import { useState, useRef } from 'react';
 import { Download, Check, Loader2 } from 'lucide-react';
 import { PatternConfig, generatePattern } from '../lib/patterns';
-import { UserTier, canDownload, getRemainingDownloads } from '../lib/userTier';
-import { addDownloadRecord } from '../lib/limits';
+import { UserTier, canDownload as canUserDownload, getRemainingDownloads } from '../lib/userTier';
+import { addDownloadRecord, canDownload, WEEKLY_LIMITS } from '../lib/limits';
 
 interface ExportButtonProps {
   config: PatternConfig;
@@ -31,8 +31,9 @@ export default function ExportButton({ config, seed, tier, downloadsToday, onDow
   const [showOptions, setShowOptions] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
 
-  const remaining = getRemainingDownloads(tier, downloadsToday);
-  const canDownloadNow = canDownload(tier, downloadsToday);
+  // Use weekly limits
+  const weeklyLimit = WEEKLY_LIMITS[tier];
+  const { allowed, remaining } = canDownload(undefined, tier);
 
   const handleExport = async (format: string) => {
     const option = EXPORT_OPTIONS.find((o) => o.id === format);
@@ -43,7 +44,7 @@ export default function ExportButton({ config, seed, tier, downloadsToday, onDow
       return;
     }
 
-    if (!canDownloadNow) {
+    if (!allowed) {
       onPremiumClick();
       return;
     }
@@ -109,7 +110,7 @@ export default function ExportButton({ config, seed, tier, downloadsToday, onDow
           <div className="px-2 py-1.5 text-xs font-semibold text-text/50 uppercase tracking-wider">
             Formato de exportación
             {remaining !== Infinity && (
-              <span className="ml-2 text-accent">({remaining} restantes hoy)</span>
+              <span className="ml-2 text-accent">({remaining} restantes esta semana)</span>
             )}
           </div>
           {EXPORT_OPTIONS.map((option) => {
