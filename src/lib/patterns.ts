@@ -185,19 +185,33 @@ function drawConcentricCircles(
   density: number,
   scale: number
 ) {
-  const cx = w / 2;
-  const cy = h / 2;
-  const maxRadius = Math.max(w, h) * 0.8;
+  // Calculate tile size based on scale (smaller scale = more tiles)
+  const baseTileSize = 150;
+  const tileSize = baseTileSize * scale;
+  
+  // Calculate how many tiles we need to fill the canvas
+  const cols = Math.ceil(w / tileSize) + 1;
+  const rows = Math.ceil(h / tileSize) + 1;
+  
   const numCircles = Math.max(3, Math.floor(5 + (density / 100) * 25));
-  const spacing = (maxRadius / numCircles) * scale;
+  const maxRadius = tileSize * 0.45;
+  const spacing = maxRadius / numCircles;
 
   ctx.strokeStyle = color;
   ctx.lineWidth = Math.max(1, 2 * scale);
 
-  for (let i = 1; i <= numCircles; i++) {
-    ctx.beginPath();
-    ctx.arc(cx, cy, i * spacing, 0, Math.PI * 2);
-    ctx.stroke();
+  // Draw concentric circles in a grid pattern
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      const cx = col * tileSize + tileSize / 2;
+      const cy = row * tileSize + tileSize / 2;
+      
+      for (let i = 1; i <= numCircles; i++) {
+        ctx.beginPath();
+        ctx.arc(cx, cy, i * spacing, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+    }
   }
 }
 
@@ -231,13 +245,21 @@ function drawDotGrid(
   density: number,
   scale: number
 ) {
-  const spacing = Math.max(10, 50 - (density / 100) * 40) / scale;
+  // Base spacing adjusted by scale and density
+  const baseSpacing = 50;
+  const spacing = (baseSpacing - (density / 100) * 30) * scale;
   const radius = Math.max(1.5, (3 + (density / 100) * 4) * scale);
 
   ctx.fillStyle = color;
 
-  for (let x = spacing / 2; x < w + spacing; x += spacing) {
-    for (let y = spacing / 2; y < h + spacing; y += spacing) {
+  // Calculate grid to fill entire canvas with extra margin
+  const startX = -spacing;
+  const startY = -spacing;
+  const endX = w + spacing;
+  const endY = h + spacing;
+
+  for (let x = startX; x < endX; x += spacing) {
+    for (let y = startY; y < endY; y += spacing) {
       ctx.beginPath();
       ctx.arc(x, y, radius, 0, Math.PI * 2);
       ctx.fill();
@@ -255,20 +277,25 @@ function drawWavyLines(
   density: number,
   scale: number
 ) {
-  const numLines = Math.max(3, Math.floor(4 + (density / 100) * 16));
+  // Calculate spacing based on density and scale
+  const baseSpacing = 40;
+  const spacing = (baseSpacing - (density / 100) * 25) * scale;
   const amplitude = (20 + (density / 100) * 30) * scale;
   const frequency = (0.01 + (density / 100) * 0.03) / scale;
-  const spacing = h / (numLines + 1);
 
   ctx.strokeStyle = color;
   ctx.lineWidth = Math.max(1, 2.5 * scale);
 
-  for (let i = 1; i <= numLines; i++) {
+  // Calculate number of lines needed to fill canvas
+  const numLines = Math.ceil(h / spacing) + 2;
+
+  for (let i = 0; i < numLines; i++) {
     const baseY = i * spacing;
     ctx.beginPath();
-    for (let x = 0; x <= w; x += 2) {
+    // Extend beyond canvas edges to ensure full coverage
+    for (let x = -10; x <= w + 10; x += 2) {
       const y = baseY + Math.sin(x * frequency + i * 0.8) * amplitude;
-      if (x === 0) ctx.moveTo(x, y);
+      if (x === -10) ctx.moveTo(x, y);
       else ctx.lineTo(x, y);
     }
     ctx.stroke();
@@ -283,25 +310,32 @@ function drawTriangleGrid(
   density: number,
   scale: number
 ) {
-  const size = Math.max(15, 60 - (density / 100) * 45) / scale;
-  const height = size * (Math.sqrt(3) / 2);
+  // Calculate triangle size based on density and scale
+  const baseSize = 60;
+  const size = (baseSize - (density / 100) * 40) * scale;
+  const triangleHeight = size * (Math.sqrt(3) / 2);
 
   ctx.strokeStyle = color;
   ctx.lineWidth = Math.max(0.5, 1.5 * scale);
 
-  let row = 0;
-  for (let y = 0; y < h + height * 2; y += height) {
+  // Calculate grid dimensions to fill canvas
+  const cols = Math.ceil(w / size) + 2;
+  const rows = Math.ceil(h / triangleHeight) + 2;
+
+  for (let row = 0; row < rows; row++) {
     const offset = row % 2 === 0 ? 0 : size / 2;
-    for (let x = -size + offset; x < w + size; x += size) {
+    for (let col = -1; col < cols; col++) {
+      const x = col * size + offset;
+      const y = row * triangleHeight;
+      
       // Upward triangle
       ctx.beginPath();
-      ctx.moveTo(x, y + height);
+      ctx.moveTo(x, y + triangleHeight);
       ctx.lineTo(x + size / 2, y);
-      ctx.lineTo(x + size, y + height);
+      ctx.lineTo(x + size, y + triangleHeight);
       ctx.closePath();
       ctx.stroke();
     }
-    row++;
   }
 }
 
@@ -313,42 +347,53 @@ function drawSquareSpiral(
   density: number,
   scale: number
 ) {
-  const cx = w / 2;
-  const cy = h / 2;
+  // Create a grid of spirals to fill the canvas
+  const baseTileSize = 120;
+  const tileSize = baseTileSize * scale;
+  
+  const cols = Math.ceil(w / tileSize) + 1;
+  const rows = Math.ceil(h / tileSize) + 1;
+  
   const maxSteps = Math.max(10, Math.floor(20 + (density / 100) * 60));
   const stepSize = Math.max(4, 12 * scale);
 
   ctx.strokeStyle = color;
   ctx.lineWidth = Math.max(1, 2 * scale);
 
-  let x = cx;
-  let y = cy;
-  let direction = 0; // 0=right, 1=down, 2=left, 3=up
-  let stepsInDirection = 1;
-  let stepsTaken = 0;
-  let directionChanges = 0;
+  // Draw spirals in a grid
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      const cx = col * tileSize + tileSize / 2;
+      const cy = row * tileSize + tileSize / 2;
+      
+      let x = cx;
+      let y = cy;
+      let direction = 0;
+      let stepsInDirection = 1;
+      let directionChanges = 0;
 
-  ctx.beginPath();
-  ctx.moveTo(x, y);
+      ctx.beginPath();
+      ctx.moveTo(x, y);
 
-  for (let i = 0; i < maxSteps; i++) {
-    for (let s = 0; s < stepsInDirection; s++) {
-      switch (direction) {
-        case 0: x += stepSize; break;
-        case 1: y += stepSize; break;
-        case 2: x -= stepSize; break;
-        case 3: y -= stepSize; break;
+      for (let i = 0; i < maxSteps; i++) {
+        for (let s = 0; s < stepsInDirection; s++) {
+          switch (direction) {
+            case 0: x += stepSize; break;
+            case 1: y += stepSize; break;
+            case 2: x -= stepSize; break;
+            case 3: y -= stepSize; break;
+          }
+          ctx.lineTo(x, y);
+        }
+        direction = (direction + 1) % 4;
+        directionChanges++;
+        if (directionChanges % 2 === 0) {
+          stepsInDirection++;
+        }
       }
-      ctx.lineTo(x, y);
-      stepsTaken++;
-    }
-    direction = (direction + 1) % 4;
-    directionChanges++;
-    if (directionChanges % 2 === 0) {
-      stepsInDirection++;
+      ctx.stroke();
     }
   }
-  ctx.stroke();
 }
 
 function drawScandinavianCross(
@@ -359,14 +404,22 @@ function drawScandinavianCross(
   density: number,
   scale: number
 ) {
-  const spacing = Math.max(25, 80 - (density / 100) * 55) / scale;
-  const armLength = spacing * 0.35 * scale;
+  // Calculate spacing based on density and scale
+  const baseSpacing = 80;
+  const spacing = (baseSpacing - (density / 100) * 50) * scale;
+  const armLength = spacing * 0.35;
   const armWidth = Math.max(2, 4 * scale);
 
   ctx.fillStyle = color;
 
-  for (let x = spacing / 2; x < w + spacing; x += spacing) {
-    for (let y = spacing / 2; y < h + spacing; y += spacing) {
+  // Calculate grid to fill entire canvas with margin
+  const startX = -spacing;
+  const startY = -spacing;
+  const endX = w + spacing;
+  const endY = h + spacing;
+
+  for (let x = startX; x < endX; x += spacing) {
+    for (let y = startY; y < endY; y += spacing) {
       // Vertical bar
       ctx.fillRect(x - armWidth / 2, y - armLength, armWidth, armLength * 2);
       // Horizontal bar
@@ -383,12 +436,19 @@ function drawVerticalStripes(
   density: number,
   scale: number
 ) {
-  const stripeWidth = Math.max(4, 30 - (density / 100) * 25) * scale;
-  const gap = Math.max(4, 20 - (density / 100) * 15) * scale;
+  // Calculate stripe dimensions based on density and scale
+  const baseWidth = 30;
+  const baseGap = 20;
+  const stripeWidth = (baseWidth - (density / 100) * 20) * scale;
+  const gap = (baseGap - (density / 100) * 15) * scale;
 
   ctx.fillStyle = color;
 
-  for (let x = 0; x < w + stripeWidth + gap; x += stripeWidth + gap) {
+  // Draw stripes across entire canvas with margin
+  const startX = -stripeWidth - gap;
+  const endX = w + stripeWidth + gap;
+
+  for (let x = startX; x < endX; x += stripeWidth + gap) {
     ctx.fillRect(x, -10, stripeWidth, h + 20);
   }
 }
@@ -405,31 +465,37 @@ function drawVoronoi(
   scale: number,
   seed: number
 ) {
-  const numPoints = Math.max(5, Math.floor(8 + (density / 100) * 40));
+  // Calculate number of points based on canvas size and density
+  const area = w * h;
+  const basePointsPerArea = 0.00005;
+  const numPoints = Math.max(10, Math.floor(area * basePointsPerArea * (0.5 + density / 100) / (scale * scale)));
+  
   const rand = seededRandom(seed);
 
-  // Generate random points
+  // Generate random points with margin to ensure coverage
+  const margin = 50 * scale;
   const points: { x: number; y: number }[] = [];
   for (let i = 0; i < numPoints; i++) {
     points.push({
-      x: rand() * w,
-      y: rand() * h,
+      x: -margin + rand() * (w + margin * 2),
+      y: -margin + rand() * (h + margin * 2),
     });
   }
 
-  // Draw Voronoi-like cells using nearest-point pixel assignment (simplified)
   ctx.strokeStyle = color;
+  ctx.fillStyle = color;
   ctx.lineWidth = Math.max(0.5, 1.5 * scale);
 
   // Draw edges by finding midpoints between neighboring points
+  const maxDist = Math.max(w, h) / Math.sqrt(numPoints) * 1.8;
+  
   for (let i = 0; i < points.length; i++) {
     for (let j = i + 1; j < points.length; j++) {
       const dx = points[j].x - points[i].x;
       const dy = points[j].y - points[i].y;
       const dist = Math.sqrt(dx * dx + dy * dy);
 
-      if (dist < (Math.max(w, h) / Math.sqrt(numPoints)) * 1.8) {
-        // Draw connecting line
+      if (dist < maxDist) {
         const mx = (points[i].x + points[j].x) / 2;
         const my = (points[i].y + points[j].y) / 2;
 
@@ -441,17 +507,11 @@ function drawVoronoi(
         ctx.moveTo(mx - Math.cos(angle) * len, my - Math.sin(angle) * len);
         ctx.lineTo(mx + Math.cos(angle) * len, my + Math.sin(angle) * len);
         ctx.stroke();
-
-        // Draw points
-        ctx.beginPath();
-        ctx.arc(points[i].x, points[i].y, 3 * scale, 0, Math.PI * 2);
-        ctx.fill();
       }
     }
   }
 
   // Draw all points
-  ctx.fillStyle = color;
   for (const p of points) {
     ctx.beginPath();
     ctx.arc(p.x, p.y, 3 * scale, 0, Math.PI * 2);
@@ -467,44 +527,57 @@ function drawArtDeco(
   density: number,
   scale: number
 ) {
-  const cx = w / 2;
-  const cy = h / 2;
+  // Create a grid of Art Deco fans to fill the canvas
+  const baseTileSize = 200;
+  const tileSize = baseTileSize * scale;
+  
+  const cols = Math.ceil(w / tileSize) + 1;
+  const rows = Math.ceil(h / tileSize) + 1;
+  
   const numRays = Math.max(6, Math.floor(8 + (density / 100) * 24));
-  const maxRadius = Math.max(w, h) * 0.7;
+  const maxRadius = tileSize * 0.7;
+  const numArcs = Math.max(3, Math.floor(4 + (density / 100) * 8));
 
   ctx.strokeStyle = color;
   ctx.lineWidth = Math.max(1, 2.5 * scale);
 
-  // Fan rays from bottom center
-  for (let i = 0; i <= numRays; i++) {
-    const angle = -Math.PI + (Math.PI * i) / numRays;
-    ctx.beginPath();
-    ctx.moveTo(cx, cy + h * 0.3);
-    ctx.lineTo(
-      cx + Math.cos(angle) * maxRadius,
-      cy + h * 0.3 + Math.sin(angle) * maxRadius
-    );
-    ctx.stroke();
-  }
+  // Draw Art Deco fans in a grid
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      const cx = col * tileSize + tileSize / 2;
+      const cy = row * tileSize + tileSize / 2;
 
-  // Concentric arcs
-  const numArcs = Math.max(3, Math.floor(4 + (density / 100) * 8));
-  for (let i = 1; i <= numArcs; i++) {
-    const radius = (i / numArcs) * maxRadius * 0.8 * scale;
-    ctx.beginPath();
-    ctx.arc(cx, cy + h * 0.3, radius, -Math.PI, 0);
-    ctx.stroke();
-  }
+      // Fan rays
+      for (let i = 0; i <= numRays; i++) {
+        const angle = -Math.PI + (Math.PI * i) / numRays;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(
+          cx + Math.cos(angle) * maxRadius,
+          cy + Math.sin(angle) * maxRadius
+        );
+        ctx.stroke();
+      }
 
-  // Decorative diamond at top
-  const diamondSize = 20 * scale;
-  ctx.beginPath();
-  ctx.moveTo(cx, cy - h * 0.3);
-  ctx.lineTo(cx + diamondSize, cy - h * 0.3 + diamondSize);
-  ctx.lineTo(cx, cy - h * 0.3 + diamondSize * 2);
-  ctx.lineTo(cx - diamondSize, cy - h * 0.3 + diamondSize);
-  ctx.closePath();
-  ctx.stroke();
+      // Concentric arcs
+      for (let i = 1; i <= numArcs; i++) {
+        const radius = (i / numArcs) * maxRadius * 0.8;
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius, -Math.PI, 0);
+        ctx.stroke();
+      }
+
+      // Decorative diamond
+      const diamondSize = 20 * scale;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy - tileSize * 0.3);
+      ctx.lineTo(cx + diamondSize, cy - tileSize * 0.3 + diamondSize);
+      ctx.lineTo(cx, cy - tileSize * 0.3 + diamondSize * 2);
+      ctx.lineTo(cx - diamondSize, cy - tileSize * 0.3 + diamondSize);
+      ctx.closePath();
+      ctx.stroke();
+    }
+  }
 }
 
 function drawTessellation(
@@ -515,21 +588,30 @@ function drawTessellation(
   density: number,
   scale: number
 ) {
-  const size = Math.max(20, 60 - (density / 100) * 40) / scale;
+  // Calculate hexagon size based on density and scale
+  const baseSize = 60;
+  const size = (baseSize - (density / 100) * 35) * scale;
   const hexHeight = size * Math.sqrt(3);
 
   ctx.strokeStyle = color;
   ctx.lineWidth = Math.max(0.5, 1.5 * scale);
 
-  let row = 0;
-  for (let y = -hexHeight; y < h + hexHeight; y += hexHeight * 0.75) {
+  // Calculate grid dimensions to fill canvas
+  const rows = Math.ceil(h / (hexHeight * 0.75)) + 2;
+  const cols = Math.ceil(w / (size * 3)) + 2;
+
+  for (let row = -1; row < rows; row++) {
+    const y = row * hexHeight * 0.75;
     const offset = row % 2 === 0 ? 0 : size * 1.5;
-    for (let x = -size * 2 + offset; x < w + size * 2; x += size * 3) {
-      // Draw hexagon
+    
+    for (let col = -1; col < cols; col++) {
+      const x = col * size * 3 + offset;
+      
+      // Draw outer hexagon
       drawHexagonShape(ctx, x, y, size);
-      // Inner pattern — smaller rotated hexagon
+      // Draw inner hexagon
       drawHexagonShape(ctx, x, y, size * 0.5);
-      // Connecting lines
+      // Draw connecting lines
       ctx.beginPath();
       ctx.moveTo(x - size * 0.5, y - size * 0.3);
       ctx.lineTo(x + size * 0.5, y + size * 0.3);
@@ -539,7 +621,6 @@ function drawTessellation(
       ctx.lineTo(x - size * 0.5, y + size * 0.3);
       ctx.stroke();
     }
-    row++;
   }
 }
 
@@ -620,16 +701,28 @@ export function generateSVG(
 }
 
 function svgConcentricCircles(w: number, h: number, color: string, density: number, scale: number): string {
-  const cx = w / 2;
-  const cy = h / 2;
-  const maxRadius = Math.max(w, h) * 0.8;
+  // Calculate tile size based on scale
+  const baseTileSize = 150;
+  const tileSize = baseTileSize * scale;
+  
+  const cols = Math.ceil(w / tileSize) + 1;
+  const rows = Math.ceil(h / tileSize) + 1;
+  
   const numCircles = Math.max(3, Math.floor(5 + (density / 100) * 25));
-  const spacing = (maxRadius / numCircles) * scale;
+  const maxRadius = tileSize * 0.45;
+  const spacing = maxRadius / numCircles;
   const strokeWidth = Math.max(1, 2 * scale);
 
   let circles = '';
-  for (let i = 1; i <= numCircles; i++) {
-    circles += `<circle cx="${cx}" cy="${cy}" r="${i * spacing}" fill="none" stroke="${color}" stroke-width="${strokeWidth}"/>`;
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      const cx = col * tileSize + tileSize / 2;
+      const cy = row * tileSize + tileSize / 2;
+      
+      for (let i = 1; i <= numCircles; i++) {
+        circles += `<circle cx="${cx}" cy="${cy}" r="${i * spacing}" fill="none" stroke="${color}" stroke-width="${strokeWidth}"/>`;
+      }
+    }
   }
   return circles;
 }
@@ -647,12 +740,18 @@ function svgDiagonalLines(w: number, h: number, color: string, density: number, 
 }
 
 function svgDotGrid(w: number, h: number, color: string, density: number, scale: number): string {
-  const spacing = Math.max(10, 50 - (density / 100) * 40) / scale;
+  const baseSpacing = 50;
+  const spacing = (baseSpacing - (density / 100) * 30) * scale;
   const radius = Math.max(1.5, (3 + (density / 100) * 4) * scale);
 
   let dots = '';
-  for (let x = spacing / 2; x < w + spacing; x += spacing) {
-    for (let y = spacing / 2; y < h + spacing; y += spacing) {
+  const startX = -spacing;
+  const startY = -spacing;
+  const endX = w + spacing;
+  const endY = h + spacing;
+
+  for (let x = startX; x < endX; x += spacing) {
+    for (let y = startY; y < endY; y += spacing) {
       dots += `<circle cx="${x}" cy="${y}" r="${radius}" fill="${color}"/>`;
     }
   }
@@ -660,17 +759,19 @@ function svgDotGrid(w: number, h: number, color: string, density: number, scale:
 }
 
 function svgWavyLines(w: number, h: number, color: string, density: number, scale: number): string {
-  const numLines = Math.max(3, Math.floor(4 + (density / 100) * 16));
+  const baseSpacing = 40;
+  const spacing = (baseSpacing - (density / 100) * 25) * scale;
   const amplitude = (20 + (density / 100) * 30) * scale;
   const frequency = (0.01 + (density / 100) * 0.03) / scale;
-  const spacing = h / (numLines + 1);
   const strokeWidth = Math.max(1, 2.5 * scale);
 
+  const numLines = Math.ceil(h / spacing) + 2;
+
   let waves = '';
-  for (let i = 1; i <= numLines; i++) {
+  for (let i = 0; i < numLines; i++) {
     const baseY = i * spacing;
-    let path = `M 0 ${baseY}`;
-    for (let x = 0; x <= w; x += 2) {
+    let path = `M -10 ${baseY}`;
+    for (let x = -10; x <= w + 10; x += 2) {
       const y = baseY + Math.sin(x * frequency + i * 0.8) * amplitude;
       path += ` L ${x} ${y}`;
     }
@@ -680,67 +781,93 @@ function svgWavyLines(w: number, h: number, color: string, density: number, scal
 }
 
 function svgTriangleGrid(w: number, h: number, color: string, density: number, scale: number): string {
-  const size = Math.max(15, 60 - (density / 100) * 45) / scale;
-  const height = size * (Math.sqrt(3) / 2);
+  const baseSize = 60;
+  const size = (baseSize - (density / 100) * 40) * scale;
+  const triangleHeight = size * (Math.sqrt(3) / 2);
   const strokeWidth = Math.max(0.5, 1.5 * scale);
 
+  const cols = Math.ceil(w / size) + 2;
+  const rows = Math.ceil(h / triangleHeight) + 2;
+
   let triangles = '';
-  let row = 0;
-  for (let y = 0; y < h + height * 2; y += height) {
+  for (let row = 0; row < rows; row++) {
     const offset = row % 2 === 0 ? 0 : size / 2;
-    for (let x = -size + offset; x < w + size; x += size) {
-      const p1 = `${x},${y + height}`;
+    for (let col = -1; col < cols; col++) {
+      const x = col * size + offset;
+      const y = row * triangleHeight;
+      
+      const p1 = `${x},${y + triangleHeight}`;
       const p2 = `${x + size / 2},${y}`;
-      const p3 = `${x + size},${y + height}`;
+      const p3 = `${x + size},${y + triangleHeight}`;
       triangles += `<polygon points="${p1} ${p2} ${p3}" fill="none" stroke="${color}" stroke-width="${strokeWidth}"/>`;
     }
-    row++;
   }
   return triangles;
 }
 
 function svgSquareSpiral(w: number, h: number, color: string, density: number, scale: number): string {
-  const cx = w / 2;
-  const cy = h / 2;
+  const baseTileSize = 120;
+  const tileSize = baseTileSize * scale;
+  
+  const cols = Math.ceil(w / tileSize) + 1;
+  const rows = Math.ceil(h / tileSize) + 1;
+  
   const maxSteps = Math.max(10, Math.floor(20 + (density / 100) * 60));
   const stepSize = Math.max(4, 12 * scale);
   const strokeWidth = Math.max(1, 2 * scale);
 
-  let x = cx;
-  let y = cy;
-  let direction = 0;
-  let stepsInDirection = 1;
-  let directionChanges = 0;
-  let path = `M ${x} ${y}`;
+  let spirals = '';
+  
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      const cx = col * tileSize + tileSize / 2;
+      const cy = row * tileSize + tileSize / 2;
+      
+      let x = cx;
+      let y = cy;
+      let direction = 0;
+      let stepsInDirection = 1;
+      let directionChanges = 0;
+      let path = `M ${x} ${y}`;
 
-  for (let i = 0; i < maxSteps; i++) {
-    for (let s = 0; s < stepsInDirection; s++) {
-      switch (direction) {
-        case 0: x += stepSize; break;
-        case 1: y += stepSize; break;
-        case 2: x -= stepSize; break;
-        case 3: y -= stepSize; break;
+      for (let i = 0; i < maxSteps; i++) {
+        for (let s = 0; s < stepsInDirection; s++) {
+          switch (direction) {
+            case 0: x += stepSize; break;
+            case 1: y += stepSize; break;
+            case 2: x -= stepSize; break;
+            case 3: y -= stepSize; break;
+          }
+          path += ` L ${x} ${y}`;
+        }
+        direction = (direction + 1) % 4;
+        directionChanges++;
+        if (directionChanges % 2 === 0) {
+          stepsInDirection++;
+        }
       }
-      path += ` L ${x} ${y}`;
-    }
-    direction = (direction + 1) % 4;
-    directionChanges++;
-    if (directionChanges % 2 === 0) {
-      stepsInDirection++;
+
+      spirals += `<path d="${path}" fill="none" stroke="${color}" stroke-width="${strokeWidth}"/>`;
     }
   }
-
-  return `<path d="${path}" fill="none" stroke="${color}" stroke-width="${strokeWidth}"/>`;
+  
+  return spirals;
 }
 
 function svgScandinavianCross(w: number, h: number, color: string, density: number, scale: number): string {
-  const spacing = Math.max(25, 80 - (density / 100) * 55) / scale;
-  const armLength = spacing * 0.35 * scale;
+  const baseSpacing = 80;
+  const spacing = (baseSpacing - (density / 100) * 50) * scale;
+  const armLength = spacing * 0.35;
   const armWidth = Math.max(2, 4 * scale);
 
   let crosses = '';
-  for (let x = spacing / 2; x < w + spacing; x += spacing) {
-    for (let y = spacing / 2; y < h + spacing; y += spacing) {
+  const startX = -spacing;
+  const startY = -spacing;
+  const endX = w + spacing;
+  const endY = h + spacing;
+
+  for (let x = startX; x < endX; x += spacing) {
+    for (let y = startY; y < endY; y += spacing) {
       crosses += `<rect x="${x - armWidth / 2}" y="${y - armLength}" width="${armWidth}" height="${armLength * 2}" fill="${color}"/>`;
       crosses += `<rect x="${x - armLength}" y="${y - armWidth / 2}" width="${armLength * 2}" height="${armWidth}" fill="${color}"/>`;
     }
@@ -749,34 +876,48 @@ function svgScandinavianCross(w: number, h: number, color: string, density: numb
 }
 
 function svgVerticalStripes(w: number, h: number, color: string, density: number, scale: number): string {
-  const stripeWidth = Math.max(4, 30 - (density / 100) * 25) * scale;
-  const gap = Math.max(4, 20 - (density / 100) * 15) * scale;
+  const baseWidth = 30;
+  const baseGap = 20;
+  const stripeWidth = (baseWidth - (density / 100) * 20) * scale;
+  const gap = (baseGap - (density / 100) * 15) * scale;
 
   let stripes = '';
-  for (let x = 0; x < w + stripeWidth + gap; x += stripeWidth + gap) {
+  const startX = -stripeWidth - gap;
+  const endX = w + stripeWidth + gap;
+
+  for (let x = startX; x < endX; x += stripeWidth + gap) {
     stripes += `<rect x="${x}" y="-10" width="${stripeWidth}" height="${h + 20}" fill="${color}"/>`;
   }
   return stripes;
 }
 
 function svgVoronoi(w: number, h: number, color: string, density: number, scale: number, seed: number): string {
-  const numPoints = Math.max(5, Math.floor(8 + (density / 100) * 40));
+  const area = w * h;
+  const basePointsPerArea = 0.00005;
+  const numPoints = Math.max(10, Math.floor(area * basePointsPerArea * (0.5 + density / 100) / (scale * scale)));
+  
   const rand = seededRandom(seed);
   const strokeWidth = Math.max(0.5, 1.5 * scale);
 
+  const margin = 50 * scale;
   const points: { x: number; y: number }[] = [];
   for (let i = 0; i < numPoints; i++) {
-    points.push({ x: rand() * w, y: rand() * h });
+    points.push({
+      x: -margin + rand() * (w + margin * 2),
+      y: -margin + rand() * (h + margin * 2),
+    });
   }
 
   let voronoi = '';
+  const maxDist = Math.max(w, h) / Math.sqrt(numPoints) * 1.8;
+  
   for (let i = 0; i < points.length; i++) {
     for (let j = i + 1; j < points.length; j++) {
       const dx = points[j].x - points[i].x;
       const dy = points[j].y - points[i].y;
       const dist = Math.sqrt(dx * dx + dy * dy);
 
-      if (dist < (Math.max(w, h) / Math.sqrt(numPoints)) * 1.8) {
+      if (dist < maxDist) {
         const mx = (points[i].x + points[j].x) / 2;
         const my = (points[i].y + points[j].y) / 2;
         const angle = Math.atan2(dy, dx) + Math.PI / 2;
@@ -795,56 +936,70 @@ function svgVoronoi(w: number, h: number, color: string, density: number, scale:
 }
 
 function svgArtDeco(w: number, h: number, color: string, density: number, scale: number): string {
-  const cx = w / 2;
-  const cy = h / 2;
+  const baseTileSize = 200;
+  const tileSize = baseTileSize * scale;
+  
+  const cols = Math.ceil(w / tileSize) + 1;
+  const rows = Math.ceil(h / tileSize) + 1;
+  
   const numRays = Math.max(6, Math.floor(8 + (density / 100) * 24));
-  const maxRadius = Math.max(w, h) * 0.7;
+  const maxRadius = tileSize * 0.7;
+  const numArcs = Math.max(3, Math.floor(4 + (density / 100) * 8));
   const strokeWidth = Math.max(1, 2.5 * scale);
 
   let artDeco = '';
 
-  // Fan rays
-  for (let i = 0; i <= numRays; i++) {
-    const angle = -Math.PI + (Math.PI * i) / numRays;
-    const x2 = cx + Math.cos(angle) * maxRadius;
-    const y2 = cy + h * 0.3 + Math.sin(angle) * maxRadius;
-    artDeco += `<line x1="${cx}" y1="${cy + h * 0.3}" x2="${x2}" y2="${y2}" stroke="${color}" stroke-width="${strokeWidth}"/>`;
-  }
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      const cx = col * tileSize + tileSize / 2;
+      const cy = row * tileSize + tileSize / 2;
 
-  // Concentric arcs
-  const numArcs = Math.max(3, Math.floor(4 + (density / 100) * 8));
-  for (let i = 1; i <= numArcs; i++) {
-    const radius = (i / numArcs) * maxRadius * 0.8 * scale;
-    artDeco += `<path d="M ${cx - radius} ${cy + h * 0.3} A ${radius} ${radius} 0 0 1 ${cx + radius} ${cy + h * 0.3}" fill="none" stroke="${color}" stroke-width="${strokeWidth}"/>`;
-  }
+      // Fan rays
+      for (let i = 0; i <= numRays; i++) {
+        const angle = -Math.PI + (Math.PI * i) / numRays;
+        const x2 = cx + Math.cos(angle) * maxRadius;
+        const y2 = cy + Math.sin(angle) * maxRadius;
+        artDeco += `<line x1="${cx}" y1="${cy}" x2="${x2}" y2="${y2}" stroke="${color}" stroke-width="${strokeWidth}"/>`;
+      }
 
-  // Diamond
-  const diamondSize = 20 * scale;
-  const dy = cy - h * 0.3;
-  artDeco += `<polygon points="${cx},${dy} ${cx + diamondSize},${dy + diamondSize} ${cx},${dy + diamondSize * 2} ${cx - diamondSize},${dy + diamondSize}" fill="none" stroke="${color}" stroke-width="${strokeWidth}"/>`;
+      // Concentric arcs
+      for (let i = 1; i <= numArcs; i++) {
+        const radius = (i / numArcs) * maxRadius * 0.8;
+        artDeco += `<path d="M ${cx - radius} ${cy} A ${radius} ${radius} 0 0 1 ${cx + radius} ${cy}" fill="none" stroke="${color}" stroke-width="${strokeWidth}"/>`;
+      }
+
+      // Diamond
+      const diamondSize = 20 * scale;
+      const dy = cy - tileSize * 0.3;
+      artDeco += `<polygon points="${cx},${dy} ${cx + diamondSize},${dy + diamondSize} ${cx},${dy + diamondSize * 2} ${cx - diamondSize},${dy + diamondSize}" fill="none" stroke="${color}" stroke-width="${strokeWidth}"/>`;
+    }
+  }
 
   return artDeco;
 }
 
 function svgTessellation(w: number, h: number, color: string, density: number, scale: number): string {
-  const size = Math.max(20, 60 - (density / 100) * 40) / scale;
+  const baseSize = 60;
+  const size = (baseSize - (density / 100) * 35) * scale;
   const hexHeight = size * Math.sqrt(3);
   const strokeWidth = Math.max(0.5, 1.5 * scale);
 
+  const rows = Math.ceil(h / (hexHeight * 0.75)) + 2;
+  const cols = Math.ceil(w / (size * 3)) + 2;
+
   let tessellation = '';
-  let row = 0;
-  for (let y = -hexHeight; y < h + hexHeight; y += hexHeight * 0.75) {
+  for (let row = -1; row < rows; row++) {
+    const y = row * hexHeight * 0.75;
     const offset = row % 2 === 0 ? 0 : size * 1.5;
-    for (let x = -size * 2 + offset; x < w + size * 2; x += size * 3) {
-      // Outer hexagon
+    
+    for (let col = -1; col < cols; col++) {
+      const x = col * size * 3 + offset;
+      
       tessellation += svgHexagonPath(x, y, size, color, strokeWidth);
-      // Inner hexagon
       tessellation += svgHexagonPath(x, y, size * 0.5, color, strokeWidth);
-      // Connecting lines
       tessellation += `<line x1="${x - size * 0.5}" y1="${y - size * 0.3}" x2="${x + size * 0.5}" y2="${y + size * 0.3}" stroke="${color}" stroke-width="${strokeWidth}"/>`;
       tessellation += `<line x1="${x + size * 0.5}" y1="${y - size * 0.3}" x2="${x - size * 0.5}" y2="${y + size * 0.3}" stroke="${color}" stroke-width="${strokeWidth}"/>`;
     }
-    row++;
   }
   return tessellation;
 }
@@ -861,25 +1016,35 @@ function svgHexagonPath(cx: number, cy: number, r: number, color: string, stroke
 }
 
 function svgFractalTree(w: number, h: number, color: string, density: number, scale: number): string {
+  const baseTileSize = 180;
+  const tileSize = baseTileSize * scale;
+  
+  const cols = Math.ceil(w / tileSize) + 1;
+  const rows = Math.ceil(h / tileSize) + 1;
+  
   const maxDepth = Math.max(3, Math.floor(4 + (density / 100) * 7));
-  const branchLength = (60 + (density / 100) * 40) * scale;
+  const branchLength = tileSize * 0.3;
   const branchAngle = Math.PI / 6 + (density / 100) * (Math.PI / 6);
 
-  const startX = w / 2;
-  const startY = h * 0.85;
+  let trees = '';
 
-  let tree = '';
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      const startX = col * tileSize + tileSize / 2;
+      const startY = row * tileSize + tileSize * 0.85;
 
-  // Trunk
-  const trunkWidth = Math.max(2, 4 * scale);
-  tree += `<line x1="${startX}" y1="${startY}" x2="${startX}" y2="${startY - branchLength * 0.5}" stroke="${color}" stroke-width="${trunkWidth}"/>`;
+      // Trunk
+      const trunkWidth = Math.max(2, 4 * scale);
+      trees += `<line x1="${startX}" y1="${startY}" x2="${startX}" y2="${startY - branchLength * 0.5}" stroke="${color}" stroke-width="${trunkWidth}"/>`;
 
-  // Branches
-  tree += svgBranch(startX, startY - branchLength * 0.5, -Math.PI / 2 - branchAngle, branchLength * 0.7, 1, maxDepth, color, scale, branchAngle, density);
-  tree += svgBranch(startX, startY - branchLength * 0.5, -Math.PI / 2 + branchAngle, branchLength * 0.7, 1, maxDepth, color, scale, branchAngle, density);
-  tree += svgBranch(startX, startY - branchLength * 0.5, -Math.PI / 2, branchLength * 0.8, 1, maxDepth, color, scale, branchAngle, density);
+      // Branches
+      trees += svgBranch(startX, startY - branchLength * 0.5, -Math.PI / 2 - branchAngle, branchLength * 0.7, 1, maxDepth, color, scale, branchAngle, density);
+      trees += svgBranch(startX, startY - branchLength * 0.5, -Math.PI / 2 + branchAngle, branchLength * 0.7, 1, maxDepth, color, scale, branchAngle, density);
+      trees += svgBranch(startX, startY - branchLength * 0.5, -Math.PI / 2, branchLength * 0.8, 1, maxDepth, color, scale, branchAngle, density);
+    }
+  }
 
-  return tree;
+  return trees;
 }
 
 function svgBranch(x: number, y: number, angle: number, length: number, depth: number, maxDepth: number, color: string, scale: number, branchAngle: number, density: number): string {
@@ -909,12 +1074,18 @@ function drawFractalTree(
   density: number,
   scale: number
 ) {
+  // Create a grid of fractal trees to fill the canvas
+  const baseTileSize = 180;
+  const tileSize = baseTileSize * scale;
+  
+  const cols = Math.ceil(w / tileSize) + 1;
+  const rows = Math.ceil(h / tileSize) + 1;
+  
   const maxDepth = Math.max(3, Math.floor(4 + (density / 100) * 7));
-  const branchLength = (60 + (density / 100) * 40) * scale;
+  const branchLength = tileSize * 0.3;
   const branchAngle = Math.PI / 6 + (density / 100) * (Math.PI / 6);
 
   ctx.strokeStyle = color;
-  ctx.lineWidth = Math.max(1, 2 * scale);
 
   function drawBranch(x: number, y: number, angle: number, length: number, depth: number) {
     if (depth > maxDepth || length < 3) return;
@@ -938,19 +1109,23 @@ function drawFractalTree(
     }
   }
 
-  // Draw tree from bottom center
-  const startX = w / 2;
-  const startY = h * 0.85;
+  // Draw trees in a grid
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      const startX = col * tileSize + tileSize / 2;
+      const startY = row * tileSize + tileSize * 0.85;
 
-  // Trunk
-  ctx.lineWidth = Math.max(2, 4 * scale);
-  ctx.beginPath();
-  ctx.moveTo(startX, startY);
-  ctx.lineTo(startX, startY - branchLength * 0.5);
-  ctx.stroke();
+      // Trunk
+      ctx.lineWidth = Math.max(2, 4 * scale);
+      ctx.beginPath();
+      ctx.moveTo(startX, startY);
+      ctx.lineTo(startX, startY - branchLength * 0.5);
+      ctx.stroke();
 
-  // Branches
-  drawBranch(startX, startY - branchLength * 0.5, -Math.PI / 2 - branchAngle, branchLength * 0.7, 1);
-  drawBranch(startX, startY - branchLength * 0.5, -Math.PI / 2 + branchAngle, branchLength * 0.7, 1);
-  drawBranch(startX, startY - branchLength * 0.5, -Math.PI / 2, branchLength * 0.8, 1);
+      // Branches
+      drawBranch(startX, startY - branchLength * 0.5, -Math.PI / 2 - branchAngle, branchLength * 0.7, 1);
+      drawBranch(startX, startY - branchLength * 0.5, -Math.PI / 2 + branchAngle, branchLength * 0.7, 1);
+      drawBranch(startX, startY - branchLength * 0.5, -Math.PI / 2, branchLength * 0.8, 1);
+    }
+  }
 }
