@@ -1,1 +1,23 @@
 @import "tailwindcss";
+
+@theme {
+  --color-background: #FAFAFA;
+  --color-text: #1A1A1A;
+  --color-accent: #2563EB;
+  --color-premium: #8B5CF6;
+  --color-border: #E5E7EB;
+  --color-accent-light: #DBEAFE;
+  --color-premium-light: #EDE9FE;
+  --font-display: 'Playfair Display', serif;
+  --font-body: 'Inter', sans-serif;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--color-background);
+  color: var(--color-text);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+}
