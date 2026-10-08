@@ -25,7 +25,8 @@ export type PatternId =
   | 'nodeGarden'
   | 'halftoneDots'
   | 'concentricNoiseRings'
-  | 'chevronPattern';
+  | 'chevronPattern'
+  | 'triangularMosaic';
 
 export type PatternTier = 'ultra-basic' | 'basic' | 'advanced';
 
@@ -72,6 +73,7 @@ export const PATTERN_DEFINITIONS: PatternDefinition[] = [
   { id: 'halftoneDots', label: 'Halftone Dots', description: 'Puntos de semitono', tier: 'advanced', emoji: '⚫' },
   { id: 'concentricNoiseRings', label: 'Noise Rings', description: 'Anillos concéntricos con ruido', tier: 'advanced', emoji: '🌀' },
   { id: 'chevronPattern', label: 'Chevron', description: 'Patrón de chevron', tier: 'advanced', emoji: '⟩' },
+  { id: 'triangularMosaic', label: 'Triangular Mosaic', description: 'Mosaico de triángulos aleatorios', tier: 'advanced', emoji: '◢' },
 ];
 
 export const defaultConfig: PatternConfig = {
@@ -210,6 +212,7 @@ function calculateTileSize(type: PatternId, density: number, scale: number): num
     halftoneDots: 100,
     concentricNoiseRings: 180,
     chevronPattern: 100,
+    triangularMosaic: 80,
   };
 
   const baseSize = baseSizes[type] || 100;
@@ -289,6 +292,9 @@ function drawSinglePattern(
       break;
     case 'chevronPattern':
       drawChevronPattern(ctx, w, h, color, density, scale);
+      break;
+    case 'triangularMosaic':
+      drawTriangularMosaic(ctx, w, h, color, density, scale, seed);
       break;
   }
 }
@@ -784,6 +790,9 @@ export function generateSVG(
       case 'chevronPattern':
         patternContent = svgChevronPattern(patternWidth, patternHeight, color, density, scale);
         break;
+      case 'triangularMosaic':
+        patternContent = svgTriangularMosaic(patternWidth, patternHeight, color, density, scale, seed);
+        break;
     }
 
     // Calculate offset to center the larger pattern
@@ -855,6 +864,8 @@ function generateSingleSVGPattern(
       return svgConcentricNoiseRings(w, h, color, density, scale, seed);
     case 'chevronPattern':
       return svgChevronPattern(w, h, color, density, scale);
+    case 'triangularMosaic':
+      return svgTriangularMosaic(w, h, color, density, scale, seed);
     default:
       return '';
   }
@@ -1746,4 +1757,126 @@ function svgChevronPattern(w: number, h: number, color: string, density: number,
     }
   }
   return chevrons;
+}
+
+// ─── TRIANGULAR MOSAIC (Book of Shapes) ───────────────────
+
+function drawTriangularMosaic(
+  ctx: CanvasRenderingContext2D,
+  w: number,
+  h: number,
+  color: string,
+  density: number,
+  scale: number,
+  seed: number
+) {
+  const rand = seededRandom(seed);
+  // Cell size based on density (more density = smaller cells)
+  const cellSize = Math.max(20, 80 - (density / 100) * 60) * scale;
+  const cols = Math.ceil(w / cellSize) + 2;
+  const rows = Math.ceil(h / cellSize) + 2;
+  
+  // Chaos factor: higher density = more chaos
+  const chaos = density / 100;
+  
+  for (let row = -1; row < rows; row++) {
+    for (let col = -1; col < cols; col++) {
+      const x = col * cellSize;
+      const y = row * cellSize;
+      
+      // Each cell has 4 possible triangle orientations
+      // 0: top-left triangle filled
+      // 1: top-right triangle filled
+      // 2: bottom-right triangle filled
+      // 3: bottom-left triangle filled
+      
+      // Use chaos to determine orientation
+      // Low chaos = more ordered pattern (pinwheel-like)
+      // High chaos = more random
+      const orderedOrientation = (row + col) % 4;
+      const randomOrientation = Math.floor(rand() * 4);
+      
+      // Mix ordered and random based on chaos
+      const orientation = rand() < chaos ? randomOrientation : orderedOrientation;
+      
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      
+      switch (orientation) {
+        case 0: // Top-left triangle
+          ctx.moveTo(x, y);
+          ctx.lineTo(x + cellSize, y);
+          ctx.lineTo(x, y + cellSize);
+          break;
+        case 1: // Top-right triangle
+          ctx.moveTo(x, y);
+          ctx.lineTo(x + cellSize, y);
+          ctx.lineTo(x + cellSize, y + cellSize);
+          break;
+        case 2: // Bottom-right triangle
+          ctx.moveTo(x + cellSize, y);
+          ctx.lineTo(x + cellSize, y + cellSize);
+          ctx.lineTo(x, y + cellSize);
+          break;
+        case 3: // Bottom-left triangle
+          ctx.moveTo(x, y);
+          ctx.lineTo(x + cellSize, y + cellSize);
+          ctx.lineTo(x, y + cellSize);
+          break;
+      }
+      
+      ctx.closePath();
+      ctx.fill();
+    }
+  }
+}
+
+function svgTriangularMosaic(
+  w: number,
+  h: number,
+  color: string,
+  density: number,
+  scale: number,
+  seed: number
+): string {
+  const rand = seededRandom(seed);
+  const cellSize = Math.max(20, 80 - (density / 100) * 60) * scale;
+  const cols = Math.ceil(w / cellSize) + 2;
+  const rows = Math.ceil(h / cellSize) + 2;
+  
+  const chaos = density / 100;
+  
+  let triangles = '';
+  
+  for (let row = -1; row < rows; row++) {
+    for (let col = -1; col < cols; col++) {
+      const x = col * cellSize;
+      const y = row * cellSize;
+      
+      const orderedOrientation = (row + col) % 4;
+      const randomOrientation = Math.floor(rand() * 4);
+      const orientation = rand() < chaos ? randomOrientation : orderedOrientation;
+      
+      let path = '';
+      
+      switch (orientation) {
+        case 0: // Top-left triangle
+          path = `M ${x} ${y} L ${x + cellSize} ${y} L ${x} ${y + cellSize} Z`;
+          break;
+        case 1: // Top-right triangle
+          path = `M ${x} ${y} L ${x + cellSize} ${y} L ${x + cellSize} ${y + cellSize} Z`;
+          break;
+        case 2: // Bottom-right triangle
+          path = `M ${x + cellSize} ${y} L ${x + cellSize} ${y + cellSize} L ${x} ${y + cellSize} Z`;
+          break;
+        case 3: // Bottom-left triangle
+          path = `M ${x} ${y} L ${x + cellSize} ${y + cellSize} L ${x} ${y + cellSize} Z`;
+          break;
+      }
+      
+      triangles += `<path d="${path}" fill="${color}"/>`;
+    }
+  }
+  
+  return triangles;
 }
