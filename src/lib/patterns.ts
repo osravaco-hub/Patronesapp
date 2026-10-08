@@ -71,8 +71,8 @@ export const PATTERN_DEFINITIONS: PatternDefinition[] = [
   { id: 'quarterArcTruchet', label: 'Arc Truchet', description: 'Arcos Truchet de cuarto', tier: 'advanced', emoji: '◠' },
   { id: 'nodeGarden', label: 'Node Garden', description: 'Jardín de nodos conectados', tier: 'advanced', emoji: '🕸' },
   { id: 'halftoneDots', label: 'Halftone Dots', description: 'Puntos de semitono', tier: 'advanced', emoji: '⚫' },
-  { id: 'concentricNoiseRings', label: 'Noise Rings', description: 'Anillos concéntricos con ruido', tier: 'advanced', emoji: '🌀' },
-  { id: 'chevronPattern', label: 'Chevron', description: 'Patrón de chevron', tier: 'advanced', emoji: '⟩' },
+  { id: 'concentricNoiseRings', label: 'Noise Rings', description: 'Anillos concéntricos con ruido', tier: 'ultra-basic', emoji: '🌀' },
+  { id: 'chevronPattern', label: 'Chevron', description: 'Patrón de chevron', tier: 'ultra-basic', emoji: '⟩' },
   { id: 'triangularMosaic', label: 'Triangular Mosaic', description: 'Mosaico de triángulos aleatorios', tier: 'advanced', emoji: '◢' },
 ];
 

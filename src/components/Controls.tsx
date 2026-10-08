@@ -53,6 +53,12 @@ export default function Controls({ config, onChange, onRandomize, onReset, tier,
     update({ color: randomColor });
   };
 
+  const randomizeFillColor = () => {
+    // Generate completely random color
+    const randomColor = '#' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0');
+    update({ color: randomColor });
+  };
+
   const toggleTransparentBg = () => {
     const isTransparent = config.backgroundColor === 'transparent';
     update({ backgroundColor: isTransparent ? '#FAFAFA' : 'transparent' });
@@ -209,6 +215,15 @@ export default function Controls({ config, onChange, onRandomize, onReset, tier,
           >
             <Shuffle className="w-4 h-4" />
             Aleatorizar Colores
+          </button>
+
+          {/* Randomize Fill Color Button */}
+          <button
+            onClick={randomizeFillColor}
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-xl font-medium hover:opacity-90 transition-all duration-200 shadow-md shadow-pink-500/20"
+          >
+            <Palette className="w-4 h-4" />
+            Aleatorizar Color de Relleno
           </button>
 
           {/* Transparent Background Toggle */}
