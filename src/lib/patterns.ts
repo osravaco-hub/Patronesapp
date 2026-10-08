@@ -16,7 +16,16 @@ export type PatternId =
   | 'voronoi'
   | 'artDeco'
   | 'tessellation'
-  | 'fractalTree';
+  | 'fractalTree'
+  // Patrones Book of Shapes (solo premium)
+  | 'flowLines'
+  | 'waveField'
+  | 'joyDivision'
+  | 'quarterArcTruchet'
+  | 'nodeGarden'
+  | 'halftoneDots'
+  | 'concentricNoiseRings'
+  | 'chevronPattern';
 
 export type PatternTier = 'ultra-basic' | 'basic' | 'advanced';
 
@@ -54,6 +63,15 @@ export const PATTERN_DEFINITIONS: PatternDefinition[] = [
   { id: 'artDeco', label: 'Art Deco', description: 'Líneas geométricas doradas', tier: 'advanced', emoji: '◈' },
   { id: 'tessellation', label: 'Tessellation', description: 'Teselado complejo', tier: 'advanced', emoji: '⬢' },
   { id: 'fractalTree', label: 'Fractal Tree', description: 'Árbol fractal', tier: 'advanced', emoji: '⚘' },
+  // Patrones Book of Shapes
+  { id: 'flowLines', label: 'Flow Lines', description: 'Líneas de flujo ondulantes', tier: 'advanced', emoji: '〰' },
+  { id: 'waveField', label: 'Wave Field', description: 'Campo de ondas', tier: 'advanced', emoji: '🌊' },
+  { id: 'joyDivision', label: 'Joy Division', description: 'Ondas verticales estilo Joy Division', tier: 'advanced', emoji: '📊' },
+  { id: 'quarterArcTruchet', label: 'Arc Truchet', description: 'Arcos Truchet de cuarto', tier: 'advanced', emoji: '◠' },
+  { id: 'nodeGarden', label: 'Node Garden', description: 'Jardín de nodos conectados', tier: 'advanced', emoji: '🕸' },
+  { id: 'halftoneDots', label: 'Halftone Dots', description: 'Puntos de semitono', tier: 'advanced', emoji: '⚫' },
+  { id: 'concentricNoiseRings', label: 'Noise Rings', description: 'Anillos concéntricos con ruido', tier: 'advanced', emoji: '🌀' },
+  { id: 'chevronPattern', label: 'Chevron', description: 'Patrón de chevron', tier: 'advanced', emoji: '⟩' },
 ];
 
 export const defaultConfig: PatternConfig = {
@@ -184,6 +202,14 @@ function calculateTileSize(type: PatternId, density: number, scale: number): num
     artDeco: 180,
     tessellation: 100,
     fractalTree: 200,
+    flowLines: 120,
+    waveField: 150,
+    joyDivision: 100,
+    quarterArcTruchet: 80,
+    nodeGarden: 200,
+    halftoneDots: 100,
+    concentricNoiseRings: 180,
+    chevronPattern: 100,
   };
 
   const baseSize = baseSizes[type] || 100;
@@ -239,6 +265,30 @@ function drawSinglePattern(
       break;
     case 'fractalTree':
       drawFractalTree(ctx, w, h, color, density, scale);
+      break;
+    case 'flowLines':
+      drawFlowLines(ctx, w, h, color, density, scale, seed);
+      break;
+    case 'waveField':
+      drawWaveField(ctx, w, h, color, density, scale, seed);
+      break;
+    case 'joyDivision':
+      drawJoyDivision(ctx, w, h, color, density, scale, seed);
+      break;
+    case 'quarterArcTruchet':
+      drawQuarterArcTruchet(ctx, w, h, color, density, scale, seed);
+      break;
+    case 'nodeGarden':
+      drawNodeGarden(ctx, w, h, color, density, scale, seed);
+      break;
+    case 'halftoneDots':
+      drawHalftoneDots(ctx, w, h, color, density, scale, seed);
+      break;
+    case 'concentricNoiseRings':
+      drawConcentricNoiseRings(ctx, w, h, color, density, scale, seed);
+      break;
+    case 'chevronPattern':
+      drawChevronPattern(ctx, w, h, color, density, scale);
       break;
   }
 }
@@ -710,6 +760,30 @@ export function generateSVG(
       case 'fractalTree':
         patternContent = svgFractalTree(width, height, color, density, scale);
         break;
+      case 'flowLines':
+        patternContent = svgFlowLines(patternWidth, patternHeight, color, density, scale, seed);
+        break;
+      case 'waveField':
+        patternContent = svgWaveField(patternWidth, patternHeight, color, density, scale, seed);
+        break;
+      case 'joyDivision':
+        patternContent = svgJoyDivision(patternWidth, patternHeight, color, density, scale, seed);
+        break;
+      case 'quarterArcTruchet':
+        patternContent = svgQuarterArcTruchet(patternWidth, patternHeight, color, density, scale, seed);
+        break;
+      case 'nodeGarden':
+        patternContent = svgNodeGarden(patternWidth, patternHeight, color, density, scale, seed);
+        break;
+      case 'halftoneDots':
+        patternContent = svgHalftoneDots(patternWidth, patternHeight, color, density, scale, seed);
+        break;
+      case 'concentricNoiseRings':
+        patternContent = svgConcentricNoiseRings(patternWidth, patternHeight, color, density, scale, seed);
+        break;
+      case 'chevronPattern':
+        patternContent = svgChevronPattern(patternWidth, patternHeight, color, density, scale);
+        break;
     }
 
     // Calculate offset to center the larger pattern
@@ -765,6 +839,22 @@ function generateSingleSVGPattern(
       return svgTessellation(w, h, color, density, scale);
     case 'fractalTree':
       return svgFractalTree(w, h, color, density, scale);
+    case 'flowLines':
+      return svgFlowLines(w, h, color, density, scale, seed);
+    case 'waveField':
+      return svgWaveField(w, h, color, density, scale, seed);
+    case 'joyDivision':
+      return svgJoyDivision(w, h, color, density, scale, seed);
+    case 'quarterArcTruchet':
+      return svgQuarterArcTruchet(w, h, color, density, scale, seed);
+    case 'nodeGarden':
+      return svgNodeGarden(w, h, color, density, scale, seed);
+    case 'halftoneDots':
+      return svgHalftoneDots(w, h, color, density, scale, seed);
+    case 'concentricNoiseRings':
+      return svgConcentricNoiseRings(w, h, color, density, scale, seed);
+    case 'chevronPattern':
+      return svgChevronPattern(w, h, color, density, scale);
     default:
       return '';
   }
@@ -1106,4 +1196,554 @@ function drawFractalTree(
   drawBranch(startX, startY - branchLength * 0.5, -Math.PI / 2 - branchAngle, branchLength * 0.7, 1);
   drawBranch(startX, startY - branchLength * 0.5, -Math.PI / 2 + branchAngle, branchLength * 0.7, 1);
   drawBranch(startX, startY - branchLength * 0.5, -Math.PI / 2, branchLength * 0.8, 1);
+}
+
+// ─── BOOK OF SHAPES PATTERNS ──────────────────────────────
+
+function drawFlowLines(
+  ctx: CanvasRenderingContext2D,
+  w: number,
+  h: number,
+  color: string,
+  density: number,
+  scale: number,
+  seed: number
+) {
+  const rand = seededRandom(seed);
+  const numLines = Math.max(10, Math.floor(20 + (density / 100) * 60));
+  const amplitude = (20 + (density / 100) * 40) * scale;
+  const frequency = 0.01 + (density / 100) * 0.02;
+  
+  ctx.strokeStyle = color;
+  ctx.lineWidth = Math.max(0.5, 1.5 * scale);
+  
+  for (let i = 0; i < numLines; i++) {
+    const startY = (h / numLines) * i;
+    const phase = rand() * Math.PI * 2;
+    
+    ctx.beginPath();
+    ctx.moveTo(0, startY);
+    
+    for (let x = 0; x <= w; x += 2) {
+      const noise = Math.sin(x * frequency + phase) * amplitude;
+      const noise2 = Math.cos(x * frequency * 1.5 + phase * 2) * amplitude * 0.5;
+      const y = startY + noise + noise2;
+      ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+  }
+}
+
+function drawWaveField(
+  ctx: CanvasRenderingContext2D,
+  w: number,
+  h: number,
+  color: string,
+  density: number,
+  scale: number,
+  seed: number
+) {
+  const rand = seededRandom(seed);
+  const gridSize = Math.max(20, 60 - (density / 100) * 40);
+  const cols = Math.ceil(w / gridSize) + 1;
+  const rows = Math.ceil(h / gridSize) + 1;
+  
+  ctx.strokeStyle = color;
+  ctx.lineWidth = Math.max(0.5, 1.5 * scale);
+  
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      const x = col * gridSize;
+      const y = row * gridSize;
+      const angle = rand() * Math.PI * 2;
+      const length = gridSize * 0.4 * scale;
+      
+      ctx.beginPath();
+      ctx.moveTo(x - Math.cos(angle) * length, y - Math.sin(angle) * length);
+      ctx.lineTo(x + Math.cos(angle) * length, y + Math.sin(angle) * length);
+      ctx.stroke();
+    }
+  }
+}
+
+function drawJoyDivision(
+  ctx: CanvasRenderingContext2D,
+  w: number,
+  h: number,
+  color: string,
+  density: number,
+  scale: number,
+  seed: number
+) {
+  const rand = seededRandom(seed);
+  const numLines = Math.max(20, Math.floor(30 + (density / 100) * 70));
+  const spacing = w / numLines;
+  const amplitude = h * 0.3 * scale;
+  
+  ctx.strokeStyle = color;
+  ctx.lineWidth = Math.max(1, 2 * scale);
+  
+  for (let i = 0; i < numLines; i++) {
+    const x = i * spacing;
+    const peakHeight = amplitude * (0.5 + rand() * 0.5);
+    const peakX = x + (rand() - 0.5) * spacing * 0.5;
+    
+    ctx.beginPath();
+    ctx.moveTo(x, h);
+    ctx.lineTo(x, h - peakHeight * 0.2);
+    
+    // Create peak
+    const cp1x = x + spacing * 0.1;
+    const cp1y = h - peakHeight * 0.8;
+    const cp2x = peakX;
+    const cp2y = h - peakHeight;
+    
+    ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, peakX, h - peakHeight);
+    
+    const cp3x = peakX;
+    const cp3y = h - peakHeight;
+    const cp4x = x + spacing * 0.9;
+    const cp4y = h - peakHeight * 0.8;
+    
+    ctx.bezierCurveTo(cp3x, cp3y, cp4x, cp4y, x + spacing, h - peakHeight * 0.2);
+    ctx.lineTo(x + spacing, h);
+    ctx.stroke();
+  }
+}
+
+function drawQuarterArcTruchet(
+  ctx: CanvasRenderingContext2D,
+  w: number,
+  h: number,
+  color: string,
+  density: number,
+  scale: number,
+  seed: number
+) {
+  const rand = seededRandom(seed);
+  const tileSize = Math.max(30, 80 - (density / 100) * 50) * scale;
+  const cols = Math.ceil(w / tileSize) + 1;
+  const rows = Math.ceil(h / tileSize) + 1;
+  
+  ctx.strokeStyle = color;
+  ctx.lineWidth = Math.max(1, 2 * scale);
+  
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      const x = col * tileSize;
+      const y = row * tileSize;
+      const rotation = rand() > 0.5 ? 0 : Math.PI / 2;
+      
+      ctx.save();
+      ctx.translate(x + tileSize / 2, y + tileSize / 2);
+      ctx.rotate(rotation);
+      ctx.translate(-tileSize / 2, -tileSize / 2);
+      
+      // Draw quarter arc
+      ctx.beginPath();
+      ctx.arc(0, 0, tileSize, 0, Math.PI / 2);
+      ctx.stroke();
+      
+      ctx.beginPath();
+      ctx.arc(tileSize, tileSize, tileSize, Math.PI, Math.PI * 1.5);
+      ctx.stroke();
+      
+      ctx.restore();
+    }
+  }
+}
+
+function drawNodeGarden(
+  ctx: CanvasRenderingContext2D,
+  w: number,
+  h: number,
+  color: string,
+  density: number,
+  scale: number,
+  seed: number
+) {
+  const rand = seededRandom(seed);
+  const numNodes = Math.max(20, Math.floor(30 + (density / 100) * 70));
+  const maxDist = (Math.max(w, h) / Math.sqrt(numNodes)) * 1.5;
+  
+  // Generate random nodes
+  const nodes: { x: number; y: number }[] = [];
+  for (let i = 0; i < numNodes; i++) {
+    nodes.push({
+      x: rand() * w,
+      y: rand() * h,
+    });
+  }
+  
+  ctx.strokeStyle = color;
+  ctx.fillStyle = color;
+  ctx.lineWidth = Math.max(0.5, 1 * scale);
+  
+  // Draw connections
+  for (let i = 0; i < nodes.length; i++) {
+    for (let j = i + 1; j < nodes.length; j++) {
+      const dx = nodes[j].x - nodes[i].x;
+      const dy = nodes[j].y - nodes[i].y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      
+      if (dist < maxDist) {
+        const opacity = 1 - (dist / maxDist);
+        ctx.globalAlpha = opacity;
+        ctx.beginPath();
+        ctx.moveTo(nodes[i].x, nodes[i].y);
+        ctx.lineTo(nodes[j].x, nodes[j].y);
+        ctx.stroke();
+      }
+    }
+  }
+  
+  // Draw nodes
+  ctx.globalAlpha = 1;
+  for (const node of nodes) {
+    ctx.beginPath();
+    ctx.arc(node.x, node.y, 3 * scale, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+function drawHalftoneDots(
+  ctx: CanvasRenderingContext2D,
+  w: number,
+  h: number,
+  color: string,
+  density: number,
+  scale: number,
+  seed: number
+) {
+  const rand = seededRandom(seed);
+  const gridSize = Math.max(15, 40 - (density / 100) * 25) * scale;
+  const cols = Math.ceil(w / gridSize) + 1;
+  const rows = Math.ceil(h / gridSize) + 1;
+  
+  ctx.fillStyle = color;
+  
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      const x = col * gridSize + gridSize / 2;
+      const y = row * gridSize + gridSize / 2;
+      
+      // Calculate distance from center for size variation
+      const centerX = w / 2;
+      const centerY = h / 2;
+      const distFromCenter = Math.sqrt(
+        Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2)
+      );
+      const maxDist = Math.sqrt(centerX * centerX + centerY * centerY);
+      const normalizedDist = distFromCenter / maxDist;
+      
+      // Dot size varies based on distance and noise
+      const noise = rand() * 0.3;
+      const size = gridSize * 0.4 * (1 - normalizedDist + noise) * scale;
+      
+      ctx.beginPath();
+      ctx.arc(x, y, Math.max(1, size), 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+}
+
+function drawConcentricNoiseRings(
+  ctx: CanvasRenderingContext2D,
+  w: number,
+  h: number,
+  color: string,
+  density: number,
+  scale: number,
+  seed: number
+) {
+  const rand = seededRandom(seed);
+  const cx = w / 2;
+  const cy = h / 2;
+  const maxRadius = Math.max(w, h) * 0.8 * scale;
+  const numRings = Math.max(5, Math.floor(10 + (density / 100) * 40));
+  const spacing = maxRadius / numRings;
+  
+  ctx.strokeStyle = color;
+  ctx.lineWidth = Math.max(0.5, 1.5 * scale);
+  
+  for (let i = 1; i <= numRings; i++) {
+    const baseRadius = i * spacing;
+    const segments = 60;
+    const noiseAmount = spacing * 0.3 * (1 + rand() * 0.5);
+    
+    ctx.beginPath();
+    for (let j = 0; j <= segments; j++) {
+      const angle = (j / segments) * Math.PI * 2;
+      const noise = (rand() - 0.5) * noiseAmount;
+      const radius = baseRadius + noise;
+      
+      const x = cx + Math.cos(angle) * radius;
+      const y = cy + Math.sin(angle) * radius;
+      
+      if (j === 0) {
+        ctx.moveTo(x, y);
+      } else {
+        ctx.lineTo(x, y);
+      }
+    }
+    ctx.closePath();
+    ctx.stroke();
+  }
+}
+
+function drawChevronPattern(
+  ctx: CanvasRenderingContext2D,
+  w: number,
+  h: number,
+  color: string,
+  density: number,
+  scale: number
+) {
+  const chevronSize = Math.max(20, 60 - (density / 100) * 40) * scale;
+  const chevronHeight = chevronSize * 0.6;
+  const cols = Math.ceil(w / chevronSize) + 2;
+  const rows = Math.ceil(h / chevronHeight) + 2;
+  
+  ctx.strokeStyle = color;
+  ctx.lineWidth = Math.max(1, 2 * scale);
+  
+  for (let row = 0; row < rows; row++) {
+    const offset = row % 2 === 0 ? 0 : chevronSize / 2;
+    const y = row * chevronHeight;
+    
+    for (let col = -1; col < cols; col++) {
+      const x = col * chevronSize + offset;
+      
+      ctx.beginPath();
+      ctx.moveTo(x, y + chevronHeight);
+      ctx.lineTo(x + chevronSize / 2, y);
+      ctx.lineTo(x + chevronSize, y + chevronHeight);
+      ctx.stroke();
+    }
+  }
+}
+
+// ─── SVG FUNCTIONS FOR BOOK OF SHAPES PATTERNS ────────────
+
+function svgFlowLines(w: number, h: number, color: string, density: number, scale: number, seed: number): string {
+  const rand = seededRandom(seed);
+  const numLines = Math.max(10, Math.floor(20 + (density / 100) * 60));
+  const amplitude = (20 + (density / 100) * 40) * scale;
+  const frequency = 0.01 + (density / 100) * 0.02;
+  const strokeWidth = Math.max(0.5, 1.5 * scale);
+  
+  let paths = '';
+  for (let i = 0; i < numLines; i++) {
+    const startY = (h / numLines) * i;
+    const phase = rand() * Math.PI * 2;
+    
+    let path = `M 0 ${startY}`;
+    for (let x = 0; x <= w; x += 2) {
+      const noise = Math.sin(x * frequency + phase) * amplitude;
+      const noise2 = Math.cos(x * frequency * 1.5 + phase * 2) * amplitude * 0.5;
+      const y = startY + noise + noise2;
+      path += ` L ${x} ${y}`;
+    }
+    paths += `<path d="${path}" fill="none" stroke="${color}" stroke-width="${strokeWidth}"/>`;
+  }
+  return paths;
+}
+
+function svgWaveField(w: number, h: number, color: string, density: number, scale: number, seed: number): string {
+  const rand = seededRandom(seed);
+  const gridSize = Math.max(20, 60 - (density / 100) * 40);
+  const cols = Math.ceil(w / gridSize) + 1;
+  const rows = Math.ceil(h / gridSize) + 1;
+  const strokeWidth = Math.max(0.5, 1.5 * scale);
+  
+  let lines = '';
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      const x = col * gridSize;
+      const y = row * gridSize;
+      const angle = rand() * Math.PI * 2;
+      const length = gridSize * 0.4 * scale;
+      
+      const x1 = x - Math.cos(angle) * length;
+      const y1 = y - Math.sin(angle) * length;
+      const x2 = x + Math.cos(angle) * length;
+      const y2 = y + Math.sin(angle) * length;
+      
+      lines += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${color}" stroke-width="${strokeWidth}"/>`;
+    }
+  }
+  return lines;
+}
+
+function svgJoyDivision(w: number, h: number, color: string, density: number, scale: number, seed: number): string {
+  const rand = seededRandom(seed);
+  const numLines = Math.max(20, Math.floor(30 + (density / 100) * 70));
+  const spacing = w / numLines;
+  const amplitude = h * 0.3 * scale;
+  const strokeWidth = Math.max(1, 2 * scale);
+  
+  let paths = '';
+  for (let i = 0; i < numLines; i++) {
+    const x = i * spacing;
+    const peakHeight = amplitude * (0.5 + rand() * 0.5);
+    const peakX = x + (rand() - 0.5) * spacing * 0.5;
+    
+    const cp1x = x + spacing * 0.1;
+    const cp1y = h - peakHeight * 0.8;
+    const cp2x = peakX;
+    const cp2y = h - peakHeight;
+    
+    const cp3x = peakX;
+    const cp3y = h - peakHeight;
+    const cp4x = x + spacing * 0.9;
+    const cp4y = h - peakHeight * 0.8;
+    
+    const path = `M ${x} ${h} L ${x} ${h - peakHeight * 0.2} C ${cp1x} ${cp1y} ${cp2x} ${cp2y} ${peakX} ${h - peakHeight} C ${cp3x} ${cp3y} ${cp4x} ${cp4y} ${x + spacing} ${h - peakHeight * 0.2} L ${x + spacing} ${h}`;
+    paths += `<path d="${path}" fill="none" stroke="${color}" stroke-width="${strokeWidth}"/>`;
+  }
+  return paths;
+}
+
+function svgQuarterArcTruchet(w: number, h: number, color: string, density: number, scale: number, seed: number): string {
+  const rand = seededRandom(seed);
+  const tileSize = Math.max(30, 80 - (density / 100) * 50) * scale;
+  const cols = Math.ceil(w / tileSize) + 1;
+  const rows = Math.ceil(h / tileSize) + 1;
+  const strokeWidth = Math.max(1, 2 * scale);
+  
+  let arcs = '';
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      const x = col * tileSize;
+      const y = row * tileSize;
+      const rotation = rand() > 0.5 ? 0 : 90;
+      
+      arcs += `<g transform="translate(${x + tileSize / 2}, ${y + tileSize / 2}) rotate(${rotation}) translate(${-tileSize / 2}, ${-tileSize / 2})">`;
+      arcs += `<path d="M 0 0 A ${tileSize} ${tileSize} 0 0 1 ${tileSize} 0" fill="none" stroke="${color}" stroke-width="${strokeWidth}"/>`;
+      arcs += `<path d="M ${tileSize} ${tileSize} A ${tileSize} ${tileSize} 0 0 1 0 ${tileSize}" fill="none" stroke="${color}" stroke-width="${strokeWidth}"/>`;
+      arcs += `</g>`;
+    }
+  }
+  return arcs;
+}
+
+function svgNodeGarden(w: number, h: number, color: string, density: number, scale: number, seed: number): string {
+  const rand = seededRandom(seed);
+  const numNodes = Math.max(20, Math.floor(30 + (density / 100) * 70));
+  const maxDist = (Math.max(w, h) / Math.sqrt(numNodes)) * 1.5;
+  const strokeWidth = Math.max(0.5, 1 * scale);
+  
+  const nodes: { x: number; y: number }[] = [];
+  for (let i = 0; i < numNodes; i++) {
+    nodes.push({
+      x: rand() * w,
+      y: rand() * h,
+    });
+  }
+  
+  let connections = '';
+  for (let i = 0; i < nodes.length; i++) {
+    for (let j = i + 1; j < nodes.length; j++) {
+      const dx = nodes[j].x - nodes[i].x;
+      const dy = nodes[j].y - nodes[i].y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      
+      if (dist < maxDist) {
+        const opacity = 1 - (dist / maxDist);
+        connections += `<line x1="${nodes[i].x}" y1="${nodes[i].y}" x2="${nodes[j].x}" y2="${nodes[j].y}" stroke="${color}" stroke-width="${strokeWidth}" opacity="${opacity}"/>`;
+      }
+    }
+  }
+  
+  let circles = '';
+  for (const node of nodes) {
+    circles += `<circle cx="${node.x}" cy="${node.y}" r="${3 * scale}" fill="${color}"/>`;
+  }
+  
+  return connections + circles;
+}
+
+function svgHalftoneDots(w: number, h: number, color: string, density: number, scale: number, seed: number): string {
+  const rand = seededRandom(seed);
+  const gridSize = Math.max(15, 40 - (density / 100) * 25) * scale;
+  const cols = Math.ceil(w / gridSize) + 1;
+  const rows = Math.ceil(h / gridSize) + 1;
+  
+  let dots = '';
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      const x = col * gridSize + gridSize / 2;
+      const y = row * gridSize + gridSize / 2;
+      
+      const centerX = w / 2;
+      const centerY = h / 2;
+      const distFromCenter = Math.sqrt(
+        Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2)
+      );
+      const maxDist = Math.sqrt(centerX * centerX + centerY * centerY);
+      const normalizedDist = distFromCenter / maxDist;
+      
+      const noise = rand() * 0.3;
+      const size = gridSize * 0.4 * (1 - normalizedDist + noise) * scale;
+      
+      dots += `<circle cx="${x}" cy="${y}" r="${Math.max(1, size)}" fill="${color}"/>`;
+    }
+  }
+  return dots;
+}
+
+function svgConcentricNoiseRings(w: number, h: number, color: string, density: number, scale: number, seed: number): string {
+  const rand = seededRandom(seed);
+  const cx = w / 2;
+  const cy = h / 2;
+  const maxRadius = Math.max(w, h) * 0.8 * scale;
+  const numRings = Math.max(5, Math.floor(10 + (density / 100) * 40));
+  const spacing = maxRadius / numRings;
+  const strokeWidth = Math.max(0.5, 1.5 * scale);
+  
+  let rings = '';
+  for (let i = 1; i <= numRings; i++) {
+    const baseRadius = i * spacing;
+    const segments = 60;
+    const noiseAmount = spacing * 0.3 * (1 + rand() * 0.5);
+    
+    let path = '';
+    for (let j = 0; j <= segments; j++) {
+      const angle = (j / segments) * Math.PI * 2;
+      const noise = (rand() - 0.5) * noiseAmount;
+      const radius = baseRadius + noise;
+      
+      const x = cx + Math.cos(angle) * radius;
+      const y = cy + Math.sin(angle) * radius;
+      
+      if (j === 0) {
+        path += `M ${x} ${y}`;
+      } else {
+        path += ` L ${x} ${y}`;
+      }
+    }
+    path += ' Z';
+    rings += `<path d="${path}" fill="none" stroke="${color}" stroke-width="${strokeWidth}"/>`;
+  }
+  return rings;
+}
+
+function svgChevronPattern(w: number, h: number, color: string, density: number, scale: number): string {
+  const chevronSize = Math.max(20, 60 - (density / 100) * 40) * scale;
+  const chevronHeight = chevronSize * 0.6;
+  const cols = Math.ceil(w / chevronSize) + 2;
+  const rows = Math.ceil(h / chevronHeight) + 2;
+  const strokeWidth = Math.max(1, 2 * scale);
+  
+  let chevrons = '';
+  for (let row = 0; row < rows; row++) {
+    const offset = row % 2 === 0 ? 0 : chevronSize / 2;
+    const y = row * chevronHeight;
+    
+    for (let col = -1; col < cols; col++) {
+      const x = col * chevronSize + offset;
+      chevrons += `<path d="M ${x} ${y + chevronHeight} L ${x + chevronSize / 2} ${y} L ${x + chevronSize} ${y + chevronHeight}" fill="none" stroke="${color}" stroke-width="${strokeWidth}"/>`;
+    }
+  }
+  return chevrons;
 }
