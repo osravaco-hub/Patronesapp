@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Shuffle, RotateCcw, Palette, Grid, Lock } from 'lucide-react';
 import { PatternConfig } from '../lib/patterns';
 import { UserTier } from '../lib/userTier';
@@ -12,12 +13,35 @@ interface ActionButtonsProps {
 }
 
 export default function ActionButtons({ config, onChange, onRandomize, onReset, tier, onPremiumClick }: ActionButtonsProps) {
-  const randomizeFillColor = () => {
-    const randomColor = '#' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0');
-    onChange({ ...config, fillColor: randomColor });
-  };
-
+  const [randomFillActive, setRandomFillActive] = useState(false);
   const isPremium = tier === 'premium';
+
+  // Efecto para generar colores aleatorios cuando el toggle está activo
+  useEffect(() => {
+    if (!randomFillActive || !isPremium) return;
+
+    const interval = setInterval(() => {
+      const randomColor = '#' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0');
+      onChange({ ...config, fillColor: randomColor });
+    }, 1000); // Cambia cada segundo
+
+    return () => clearInterval(interval);
+  }, [randomFillActive, isPremium, config, onChange]);
+
+  const handleToggleRandomFill = () => {
+    if (!isPremium) {
+      onPremiumClick();
+      return;
+    }
+    
+    const newState = !randomFillActive;
+    setRandomFillActive(newState);
+    
+    // Si se desactiva, limpiar el fillColor
+    if (!newState) {
+      onChange({ ...config, fillColor: undefined });
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -51,23 +75,17 @@ export default function ActionButtons({ config, onChange, onRandomize, onReset, 
             {!isPremium && <Lock className="w-3 h-3 text-text-secondary" />}
           </div>
           <button
-            onClick={() => {
-              if (isPremium) {
-                randomizeFillColor();
-              } else {
-                onPremiumClick();
-              }
-            }}
+            onClick={handleToggleRandomFill}
             disabled={!isPremium}
             className={`w-12 h-6 rounded-full transition-all duration-200 ${
               isPremium
-                ? config.fillColor ? 'bg-accent-blue' : 'bg-border'
+                ? randomFillActive ? 'bg-accent-blue' : 'bg-border'
                 : 'bg-border opacity-50 cursor-not-allowed'
             }`}
           >
             <div
               className={`w-5 h-5 rounded-full bg-background shadow-sm transition-transform duration-200 ${
-                isPremium && config.fillColor ? 'translate-x-6' : 'translate-x-0.5'
+                isPremium && randomFillActive ? 'translate-x-6' : 'translate-x-0.5'
               }`}
             />
           </button>

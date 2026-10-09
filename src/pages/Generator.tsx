@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useTheme } from '../hooks/useTheme';
 import { PatternConfig, defaultConfig, PATTERN_DEFINITIONS, PatternId } from '../lib/patterns';
@@ -27,6 +27,11 @@ export default function Generator({ onNavigateDashboard }: GeneratorProps) {
   const [upsellFeature, setUpsellFeature] = useState('');
   const [canvasRatio, setCanvasRatio] = useState<'1:1' | '16:9' | '4:3' | '9:16'>('1:1');
   const [activePlanTab, setActivePlanTab] = useState<'free' | 'lite' | 'premium'>('free');
+
+  // Regenerar patrón cuando cambia el ratio
+  useEffect(() => {
+    setSeed(prev => prev + 1);
+  }, [canvasRatio]);
 
   const handleRandomize = useCallback(() => {
     setSeed(Math.floor(Math.random() * 100000));

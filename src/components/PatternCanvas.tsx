@@ -46,7 +46,6 @@ export default memo(function PatternCanvas({ config, seed, tier, width = 600, he
         className="w-full h-auto block"
         style={{
           maxWidth: '100%',
-          aspectRatio: '1/1',
           filter: isAvailable ? 'none' : 'blur(4px)',
           transition: 'filter 0.3s ease',
         }}
