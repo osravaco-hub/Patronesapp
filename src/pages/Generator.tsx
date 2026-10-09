@@ -25,6 +25,7 @@ export default function Generator({ onNavigateDashboard }: GeneratorProps) {
   const [user, setUser] = useState<UserState>(getDefaultUser());
   const [showUpsell, setShowUpsell] = useState(false);
   const [upsellFeature, setUpsellFeature] = useState('');
+  const [isLiteAccess, setIsLiteAccess] = useState(false);
   const [canvasRatio, setCanvasRatio] = useState<'1:1' | '16:9' | '4:3' | '9:16'>('1:1');
   const [activePlanTab, setActivePlanTab] = useState<'free' | 'lite' | 'premium'>('free');
 
@@ -53,9 +54,20 @@ export default function Generator({ onNavigateDashboard }: GeneratorProps) {
   }, []);
 
   const handleUpgrade = useCallback(() => {
-    setUser(prev => simulatePremiumUpgrade(prev));
-    setShowUpsell(false);
-  }, []);
+    if (isLiteAccess) {
+      // Para Lite, cerrar el modal de upsell y abrir el modal de autenticación
+      setShowUpsell(false);
+      // El modal de autenticación se abrirá desde el Header
+      // Por ahora, simulamos el login directamente
+      setUser(simulateLogin('usuario@ejemplo.com'));
+      setActivePlanTab('lite');
+    } else {
+      // Para Premium, simular el pago
+      setUser(prev => simulatePremiumUpgrade(prev));
+      setShowUpsell(false);
+      setActivePlanTab('premium');
+    }
+  }, [isLiteAccess]);
 
   const handleLogin = useCallback((email: string) => {
     setUser(simulateLogin(email));
@@ -66,7 +78,13 @@ export default function Generator({ onNavigateDashboard }: GeneratorProps) {
     const userOrder = { guest: 0, free: 1, premium: 2 };
     
     if (planOrder[plan] > userOrder[user.tier]) {
-      setUpsellFeature(`acceso al plan ${plan === 'lite' ? 'Lite' : 'Premium'}`);
+      if (plan === 'lite') {
+        setUpsellFeature('el plan Lite');
+        setIsLiteAccess(true);
+      } else if (plan === 'premium') {
+        setUpsellFeature('el plan Premium ($3.99/mes)');
+        setIsLiteAccess(false);
+      }
       setShowUpsell(true);
     } else {
       setActivePlanTab(plan);
@@ -211,6 +229,7 @@ export default function Generator({ onNavigateDashboard }: GeneratorProps) {
         feature={upsellFeature}
         onUpgrade={handleUpgrade}
         currentTier={user.tier}
+        isLiteAccess={isLiteAccess}
       />
     </div>
   );
