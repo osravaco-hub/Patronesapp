@@ -7,14 +7,14 @@ interface PatternSelectorNewProps {
 }
 
 export default function PatternSelectorNew({ selected, onSelect, activePlanTab }: PatternSelectorNewProps) {
-  // Filter patterns based on active plan tab
+  // Filter patterns based on active plan tab - each plan shows ONLY its own patterns
   const availablePatterns = PATTERN_DEFINITIONS.filter(pattern => {
     if (activePlanTab === 'free') {
       return pattern.tier === 'ultra-basic';
     } else if (activePlanTab === 'lite') {
-      return pattern.tier === 'ultra-basic' || pattern.id === 'concentricNoiseRings';
+      return pattern.tier === 'basic';
     } else {
-      return true; // premium shows all
+      return pattern.tier === 'advanced';
     }
   });
 
