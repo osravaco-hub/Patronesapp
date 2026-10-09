@@ -9,7 +9,7 @@ export default function App() {
   const [page, setPage] = useState<Page>('landing');
 
   if (page === 'landing') {
-    return <Landing onStart={() => setPage('generator')} />;
+    return <Landing onStart={() => setPage('generator')} onNavigateDashboard={() => setPage('dashboard')} />;
   }
 
   if (page === 'dashboard') {

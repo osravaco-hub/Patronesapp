@@ -10,18 +10,25 @@ import {
   TrendingUp,
   Settings,
 } from 'lucide-react';
-import { getDefaultUser, UserState, DOWNLOAD_LIMITS, saveUser } from '../lib/userTier';
+import { getDefaultUser, UserState, DOWNLOAD_LIMITS, saveUser, simulateLogin } from '../lib/userTier';
 import { getDownloadHistory, DownloadRecord, getLimitInfo } from '../lib/limits';
 import { PATTERN_DEFINITIONS } from '../lib/patterns';
 import { createPortalSession } from '../lib/stripe';
+import { useTheme } from '../hooks/useTheme';
+import Header from '../components/Header';
 
 interface DashboardProps {
   onBack: () => void;
 }
 
 export default function Dashboard({ onBack }: DashboardProps) {
+  const { theme, toggleTheme } = useTheme();
   const [user, setUser] = useState<UserState>(getDefaultUser());
   const [history, setHistory] = useState<DownloadRecord[]>([]);
+
+  const handleLogin = (email: string) => {
+    setUser(simulateLogin(email));
+  };
 
   useEffect(() => {
     setHistory(getDownloadHistory());
@@ -78,35 +85,45 @@ export default function Dashboard({ onBack }: DashboardProps) {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-lg border-b border-border">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={onBack}
-              className="p-2 rounded-lg hover:bg-border/50 transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </button>
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent to-premium flex items-center justify-center">
-                <Sparkles className="w-4 h-4 text-white" />
+      <div className="sticky top-0 z-40">
+        <Header
+          theme={theme}
+          onToggleTheme={toggleTheme}
+          user={user}
+          onLogin={handleLogin}
+          onNavigateDashboard={onBack}
+        />
+        {/* Dashboard-specific header info */}
+        <div className="bg-background border-b border-border">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={onBack}
+                className="p-2 rounded-lg hover:bg-border/50 transition-colors"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent to-premium flex items-center justify-center">
+                  <Sparkles className="w-4 h-4 text-white" />
+                </div>
+                <h1 className="text-lg font-bold font-[family-name:var(--font-display)]">Dashboard</h1>
               </div>
-              <h1 className="text-lg font-bold font-[family-name:var(--font-display)]">Dashboard</h1>
+            </div>
+
+            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium ${
+              user.tier === 'premium'
+                ? 'bg-premium-light text-premium'
+                : user.tier === 'free'
+                  ? 'bg-accent-light text-accent'
+                  : 'bg-border/50 text-text/50'
+            }`}>
+              {user.tier === 'premium' && <Crown className="w-3.5 h-3.5" />}
+              {user.tier === 'premium' ? 'Premium' : user.tier === 'free' ? 'Free' : 'Invitado'}
             </div>
           </div>
-
-          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium ${
-            user.tier === 'premium'
-              ? 'bg-premium-light text-premium'
-              : user.tier === 'free'
-                ? 'bg-accent-light text-accent'
-                : 'bg-border/50 text-text/50'
-          }`}>
-            {user.tier === 'premium' && <Crown className="w-3.5 h-3.5" />}
-            {user.tier === 'premium' ? 'Premium' : user.tier === 'free' ? 'Free' : 'Invitado'}
-          </div>
         </div>
-      </header>
+      </div>
 
       <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
         {/* Welcome */}

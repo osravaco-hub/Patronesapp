@@ -1,25 +1,32 @@
 import { Sparkles, ArrowRight } from 'lucide-react';
+import { useTheme } from '../hooks/useTheme';
+import { UserState, getDefaultUser, simulateLogin } from '../lib/userTier';
+import Header from '../components/Header';
+import { useState } from 'react';
 
 interface LandingProps {
   onStart: () => void;
+  onNavigateDashboard: () => void;
 }
 
-export default function Landing({ onStart }: LandingProps) {
+export default function Landing({ onStart, onNavigateDashboard }: LandingProps) {
+  const { theme, toggleTheme } = useTheme();
+  const [user, setUser] = useState<UserState>(getDefaultUser());
+
+  const handleLogin = (email: string) => {
+    setUser(simulateLogin(email));
+  };
+
   return (
     <div className="min-h-screen bg-background transition-colors duration-300 flex flex-col">
       {/* Header */}
-      <header className="border-b border-border transition-colors duration-300">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent to-accent-blue flex items-center justify-center">
-              <span className="text-text font-bold text-sm">GP</span>
-            </div>
-            <h1 className="text-xl font-bold text-text font-[family-name:var(--font-display)]">
-              GeoPattern
-            </h1>
-          </div>
-        </div>
-      </header>
+      <Header
+        theme={theme}
+        onToggleTheme={toggleTheme}
+        user={user}
+        onLogin={handleLogin}
+        onNavigateDashboard={onNavigateDashboard}
+      />
 
       {/* Hero Section */}
       <main className="flex-1 flex items-center justify-center px-4 sm:px-6 py-12">
