@@ -40,6 +40,7 @@ export interface PatternConfig {
   scale: number; // 0.5-2.0
   strokeWidth?: number; // Grosor de línea
   tilePattern: boolean; // Repetir patrón en cuadrícula
+  randomFillPerElement?: boolean; // Colores aleatorios por elemento individual
 }
 
 export interface PatternDefinition {
@@ -143,7 +144,7 @@ export function generatePattern(
   config: PatternConfig,
   seed: number = 42
 ) {
-  const { type, color, backgroundColor, density, rotation, scale, tilePattern } = config;
+  const { type, color, backgroundColor, density, rotation, scale, tilePattern, randomFillPerElement } = config;
 
   // Clear and fill background
   ctx.clearRect(0, 0, width, height);
@@ -170,7 +171,7 @@ export function generatePattern(
       for (let col = 0; col < cols; col++) {
         ctx.save();
         ctx.translate(col * tileSize, row * tileSize);
-        drawSinglePattern(ctx, type, tileSize, tileSize, color, backgroundColor, density, scale, seed);
+        drawSinglePattern(ctx, type, tileSize, tileSize, color, backgroundColor, density, scale, seed, randomFillPerElement);
         ctx.restore();
       }
     }
@@ -187,7 +188,7 @@ export function generatePattern(
     ctx.rotate((rotation * Math.PI) / 180);
     ctx.translate(-patternWidth / 2, -patternHeight / 2);
 
-    drawSinglePattern(ctx, type, patternWidth, patternHeight, color, backgroundColor, density, scale, seed);
+    drawSinglePattern(ctx, type, patternWidth, patternHeight, color, backgroundColor, density, scale, seed, randomFillPerElement);
 
     ctx.restore();
   }
@@ -234,7 +235,8 @@ function drawSinglePattern(
   backgroundColor: string,
   density: number,
   scale: number,
-  seed: number
+  seed: number,
+  randomFillPerElement: boolean = false
 ) {
   switch (type) {
     case 'concentricCircles':
@@ -244,7 +246,7 @@ function drawSinglePattern(
       drawDiagonalLines(ctx, w, h, color, density, scale);
       break;
     case 'dotGrid':
-      drawDotGrid(ctx, w, h, color, density, scale);
+      drawDotGrid(ctx, w, h, color, density, scale, randomFillPerElement);
       break;
     case 'wavyLines':
       drawWavyLines(ctx, w, h, color, density, scale);
@@ -256,10 +258,10 @@ function drawSinglePattern(
       drawSquareSpiral(ctx, w, h, color, density, scale);
       break;
     case 'scandinavianCross':
-      drawScandinavianCross(ctx, w, h, color, density, scale);
+      drawScandinavianCross(ctx, w, h, color, density, scale, randomFillPerElement);
       break;
     case 'verticalStripes':
-      drawVerticalStripes(ctx, w, h, color, density, scale);
+      drawVerticalStripes(ctx, w, h, color, density, scale, randomFillPerElement);
       break;
     case 'voronoi':
       drawVoronoi(ctx, w, h, color, backgroundColor, density, scale, seed);
@@ -277,7 +279,7 @@ function drawSinglePattern(
       drawFlowLines(ctx, w, h, color, density, scale, seed);
       break;
     case 'waveField':
-      drawWaveField(ctx, w, h, color, density, scale, seed);
+      drawWaveField(ctx, w, h, color, density, scale, seed, randomFillPerElement);
       break;
     case 'joyDivision':
       drawJoyDivision(ctx, w, h, color, density, scale, seed);
@@ -289,7 +291,7 @@ function drawSinglePattern(
       drawNodeGarden(ctx, w, h, color, density, scale, seed);
       break;
     case 'halftoneDots':
-      drawHalftoneDots(ctx, w, h, color, density, scale, seed);
+      drawHalftoneDots(ctx, w, h, color, density, scale, seed, randomFillPerElement);
       break;
     case 'concentricNoiseRings':
       drawConcentricNoiseRings(ctx, w, h, color, density, scale, seed);
@@ -298,7 +300,7 @@ function drawSinglePattern(
       drawChevronPattern(ctx, w, h, color, density, scale);
       break;
     case 'triangularMosaic':
-      drawTriangularMosaic(ctx, w, h, color, density, scale, seed);
+      drawTriangularMosaic(ctx, w, h, color, density, scale, seed, randomFillPerElement);
       break;
   }
 }
@@ -360,15 +362,20 @@ function drawDotGrid(
   h: number,
   color: string,
   density: number,
-  scale: number
+  scale: number,
+  randomFillPerElement: boolean = false
 ) {
   const spacing = Math.max(10, 50 - (density / 100) * 40) / scale;
   const radius = Math.max(1.5, (3 + (density / 100) * 4) * scale);
 
-  ctx.fillStyle = color;
-
   for (let x = spacing / 2; x < w + spacing; x += spacing) {
     for (let y = spacing / 2; y < h + spacing; y += spacing) {
+      if (randomFillPerElement) {
+        const randomColor = '#' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0');
+        ctx.fillStyle = randomColor;
+      } else {
+        ctx.fillStyle = color;
+      }
       ctx.beginPath();
       ctx.arc(x, y, radius, 0, Math.PI * 2);
       ctx.fill();
@@ -489,16 +496,21 @@ function drawScandinavianCross(
   h: number,
   color: string,
   density: number,
-  scale: number
+  scale: number,
+  randomFillPerElement: boolean = false
 ) {
   const spacing = Math.max(25, 80 - (density / 100) * 55) / scale;
   const armLength = spacing * 0.35 * scale;
   const armWidth = Math.max(2, 4 * scale);
 
-  ctx.fillStyle = color;
-
   for (let x = spacing / 2; x < w + spacing; x += spacing) {
     for (let y = spacing / 2; y < h + spacing; y += spacing) {
+      if (randomFillPerElement) {
+        const randomColor = '#' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0');
+        ctx.fillStyle = randomColor;
+      } else {
+        ctx.fillStyle = color;
+      }
       // Vertical bar
       ctx.fillRect(x - armWidth / 2, y - armLength, armWidth, armLength * 2);
       // Horizontal bar
@@ -513,14 +525,19 @@ function drawVerticalStripes(
   h: number,
   color: string,
   density: number,
-  scale: number
+  scale: number,
+  randomFillPerElement: boolean = false
 ) {
   const stripeWidth = Math.max(4, 30 - (density / 100) * 25) * scale;
   const gap = Math.max(4, 20 - (density / 100) * 15) * scale;
 
-  ctx.fillStyle = color;
-
   for (let x = 0; x < w + stripeWidth + gap; x += stripeWidth + gap) {
+    if (randomFillPerElement) {
+      const randomColor = '#' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0');
+      ctx.fillStyle = randomColor;
+    } else {
+      ctx.fillStyle = color;
+    }
     ctx.fillRect(x, -10, stripeWidth, h + 20);
   }
 }
@@ -1256,14 +1273,14 @@ function drawWaveField(
   color: string,
   density: number,
   scale: number,
-  seed: number
+  seed: number,
+  randomFillPerElement: boolean = false
 ) {
   const rand = seededRandom(seed);
   const gridSize = Math.max(20, 60 - (density / 100) * 40);
   const cols = Math.ceil(w / gridSize) + 1;
   const rows = Math.ceil(h / gridSize) + 1;
   
-  ctx.strokeStyle = color;
   ctx.lineWidth = Math.max(0.5, 1.5 * scale);
   
   for (let row = 0; row < rows; row++) {
@@ -1272,6 +1289,13 @@ function drawWaveField(
       const y = row * gridSize;
       const angle = rand() * Math.PI * 2;
       const length = gridSize * 0.4 * scale;
+      
+      if (randomFillPerElement) {
+        const randomColor = '#' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0');
+        ctx.strokeStyle = randomColor;
+      } else {
+        ctx.strokeStyle = color;
+      }
       
       ctx.beginPath();
       ctx.moveTo(x - Math.cos(angle) * length, y - Math.sin(angle) * length);
@@ -1428,14 +1452,13 @@ function drawHalftoneDots(
   color: string,
   density: number,
   scale: number,
-  seed: number
+  seed: number,
+  randomFillPerElement: boolean = false
 ) {
   const rand = seededRandom(seed);
   const gridSize = Math.max(15, 40 - (density / 100) * 25) * scale;
   const cols = Math.ceil(w / gridSize) + 1;
   const rows = Math.ceil(h / gridSize) + 1;
-  
-  ctx.fillStyle = color;
   
   for (let row = 0; row < rows; row++) {
     for (let col = 0; col < cols; col++) {
@@ -1454,6 +1477,13 @@ function drawHalftoneDots(
       // Dot size varies based on distance and noise
       const noise = rand() * 0.3;
       const size = gridSize * 0.4 * (1 - normalizedDist + noise) * scale;
+      
+      if (randomFillPerElement) {
+        const randomColor = '#' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0');
+        ctx.fillStyle = randomColor;
+      } else {
+        ctx.fillStyle = color;
+      }
       
       ctx.beginPath();
       ctx.arc(x, y, Math.max(1, size), 0, Math.PI * 2);
@@ -1772,7 +1802,8 @@ function drawTriangularMosaic(
   color: string,
   density: number,
   scale: number,
-  seed: number
+  seed: number,
+  randomFillPerElement: boolean = false
 ) {
   const rand = seededRandom(seed);
   // Cell size based on density (more density = smaller cells)
@@ -1803,7 +1834,13 @@ function drawTriangularMosaic(
       // Mix ordered and random based on chaos
       const orientation = rand() < chaos ? randomOrientation : orderedOrientation;
       
-      ctx.fillStyle = color;
+      if (randomFillPerElement) {
+        const randomColor = '#' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0');
+        ctx.fillStyle = randomColor;
+      } else {
+        ctx.fillStyle = color;
+      }
+      
       ctx.beginPath();
       
       switch (orientation) {

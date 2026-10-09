@@ -13,20 +13,8 @@ interface ActionButtonsProps {
 }
 
 export default function ActionButtons({ config, onChange, onRandomize, onReset, tier, onPremiumClick }: ActionButtonsProps) {
-  const [randomFillActive, setRandomFillActive] = useState(false);
+  const [randomFillActive, setRandomFillActive] = useState(config.randomFillPerElement || false);
   const isPremium = tier === 'premium';
-
-  // Efecto para generar colores aleatorios cuando el toggle está activo
-  useEffect(() => {
-    if (!randomFillActive || !isPremium) return;
-
-    const interval = setInterval(() => {
-      const randomColor = '#' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0');
-      onChange({ ...config, fillColor: randomColor });
-    }, 1000); // Cambia cada segundo
-
-    return () => clearInterval(interval);
-  }, [randomFillActive, isPremium, config, onChange]);
 
   const handleToggleRandomFill = () => {
     if (!isPremium) {
@@ -37,9 +25,12 @@ export default function ActionButtons({ config, onChange, onRandomize, onReset, 
     const newState = !randomFillActive;
     setRandomFillActive(newState);
     
-    // Si se desactiva, limpiar el fillColor
+    // Si se desactiva, limpiar el fillColor y randomFillPerElement
     if (!newState) {
-      onChange({ ...config, fillColor: undefined });
+      onChange({ ...config, fillColor: undefined, randomFillPerElement: false });
+    } else {
+      // Si se activa, activar randomFillPerElement para colores por elemento
+      onChange({ ...config, randomFillPerElement: true });
     }
   };
 
