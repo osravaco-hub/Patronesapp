@@ -87,7 +87,7 @@ export const defaultConfig: PatternConfig = {
   density: 50,
   rotation: 0,
   scale: 1.0,
-  strokeWidth: 2,
+  strokeWidth: 2, // Grosor de línea por defecto (como en Illustrator)
   tilePattern: false,
 };
 
@@ -144,7 +144,7 @@ export function generatePattern(
   config: PatternConfig,
   seed: number = 42
 ) {
-  const { type, color, backgroundColor, density, rotation, scale, tilePattern, randomFillPerElement } = config;
+  const { type, color, backgroundColor, density, rotation, scale, tilePattern, randomFillPerElement, strokeWidth = 2 } = config;
 
   // Clear and fill background
   ctx.clearRect(0, 0, width, height);
@@ -171,7 +171,7 @@ export function generatePattern(
       for (let col = 0; col < cols; col++) {
         ctx.save();
         ctx.translate(col * tileSize, row * tileSize);
-        drawSinglePattern(ctx, type, tileSize, tileSize, color, backgroundColor, density, scale, seed, randomFillPerElement);
+        drawSinglePattern(ctx, type, tileSize, tileSize, color, backgroundColor, density, scale, seed, randomFillPerElement, strokeWidth);
         ctx.restore();
       }
     }
@@ -188,7 +188,7 @@ export function generatePattern(
     ctx.rotate((rotation * Math.PI) / 180);
     ctx.translate(-patternWidth / 2, -patternHeight / 2);
 
-    drawSinglePattern(ctx, type, patternWidth, patternHeight, color, backgroundColor, density, scale, seed, randomFillPerElement);
+    drawSinglePattern(ctx, type, patternWidth, patternHeight, color, backgroundColor, density, scale, seed, randomFillPerElement, strokeWidth);
 
     ctx.restore();
   }
@@ -236,26 +236,27 @@ function drawSinglePattern(
   density: number,
   scale: number,
   seed: number,
-  randomFillPerElement: boolean = false
+  randomFillPerElement: boolean = false,
+  strokeWidth: number = 2
 ) {
   switch (type) {
     case 'concentricCircles':
-      drawConcentricCircles(ctx, w, h, color, density, scale);
+      drawConcentricCircles(ctx, w, h, color, density, scale, strokeWidth);
       break;
     case 'diagonalLines':
-      drawDiagonalLines(ctx, w, h, color, density, scale);
+      drawDiagonalLines(ctx, w, h, color, density, scale, strokeWidth);
       break;
     case 'dotGrid':
       drawDotGrid(ctx, w, h, color, density, scale, randomFillPerElement);
       break;
     case 'wavyLines':
-      drawWavyLines(ctx, w, h, color, density, scale);
+      drawWavyLines(ctx, w, h, color, density, scale, strokeWidth);
       break;
     case 'triangleGrid':
-      drawTriangleGrid(ctx, w, h, color, density, scale);
+      drawTriangleGrid(ctx, w, h, color, density, scale, strokeWidth);
       break;
     case 'squareSpiral':
-      drawSquareSpiral(ctx, w, h, color, density, scale);
+      drawSquareSpiral(ctx, w, h, color, density, scale, strokeWidth);
       break;
     case 'scandinavianCross':
       drawScandinavianCross(ctx, w, h, color, density, scale, randomFillPerElement);
@@ -264,40 +265,40 @@ function drawSinglePattern(
       drawVerticalStripes(ctx, w, h, color, density, scale, randomFillPerElement);
       break;
     case 'voronoi':
-      drawVoronoi(ctx, w, h, color, backgroundColor, density, scale, seed);
+      drawVoronoi(ctx, w, h, color, backgroundColor, density, scale, seed, strokeWidth);
       break;
     case 'artDeco':
-      drawArtDeco(ctx, w, h, color, density, scale);
+      drawArtDeco(ctx, w, h, color, density, scale, strokeWidth);
       break;
     case 'tessellation':
-      drawTessellation(ctx, w, h, color, density, scale);
+      drawTessellation(ctx, w, h, color, density, scale, strokeWidth);
       break;
     case 'fractalTree':
-      drawFractalTree(ctx, w, h, color, density, scale);
+      drawFractalTree(ctx, w, h, color, density, scale, strokeWidth);
       break;
     case 'flowLines':
-      drawFlowLines(ctx, w, h, color, density, scale, seed);
+      drawFlowLines(ctx, w, h, color, density, scale, seed, strokeWidth);
       break;
     case 'waveField':
-      drawWaveField(ctx, w, h, color, density, scale, seed, randomFillPerElement);
+      drawWaveField(ctx, w, h, color, density, scale, seed, randomFillPerElement, strokeWidth);
       break;
     case 'joyDivision':
-      drawJoyDivision(ctx, w, h, color, density, scale, seed);
+      drawJoyDivision(ctx, w, h, color, density, scale, seed, strokeWidth);
       break;
     case 'quarterArcTruchet':
-      drawQuarterArcTruchet(ctx, w, h, color, density, scale, seed);
+      drawQuarterArcTruchet(ctx, w, h, color, density, scale, seed, strokeWidth);
       break;
     case 'nodeGarden':
-      drawNodeGarden(ctx, w, h, color, density, scale, seed);
+      drawNodeGarden(ctx, w, h, color, density, scale, seed, strokeWidth);
       break;
     case 'halftoneDots':
       drawHalftoneDots(ctx, w, h, color, density, scale, seed, randomFillPerElement);
       break;
     case 'concentricNoiseRings':
-      drawConcentricNoiseRings(ctx, w, h, color, density, scale, seed);
+      drawConcentricNoiseRings(ctx, w, h, color, density, scale, seed, strokeWidth);
       break;
     case 'chevronPattern':
-      drawChevronPattern(ctx, w, h, color, density, scale);
+      drawChevronPattern(ctx, w, h, color, density, scale, strokeWidth);
       break;
     case 'triangularMosaic':
       drawTriangularMosaic(ctx, w, h, color, density, scale, seed, randomFillPerElement);
@@ -313,7 +314,8 @@ function drawConcentricCircles(
   h: number,
   color: string,
   density: number,
-  scale: number
+  scale: number,
+  strokeWidth: number = 2
 ) {
   const cx = w / 2;
   const cy = h / 2;
@@ -324,7 +326,9 @@ function drawConcentricCircles(
   const spacing = maxRadius / numCircles;
 
   ctx.strokeStyle = color;
-  ctx.lineWidth = Math.max(1, 2 * scale);
+  ctx.lineWidth = strokeWidth;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
 
   // Draw concentric circles filling the canvas
   for (let i = 1; i <= numCircles; i++) {
@@ -340,13 +344,16 @@ function drawDiagonalLines(
   h: number,
   color: string,
   density: number,
-  scale: number
+  scale: number,
+  strokeWidth: number = 2
 ) {
   const spacing = Math.max(8, 60 - (density / 100) * 50) / scale;
   const diagonal = Math.sqrt(w * w + h * h);
 
   ctx.strokeStyle = color;
-  ctx.lineWidth = Math.max(1, 2 * scale);
+  ctx.lineWidth = strokeWidth;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
 
   for (let i = -diagonal; i < diagonal * 2; i += spacing) {
     ctx.beginPath();
@@ -391,7 +398,8 @@ function drawWavyLines(
   h: number,
   color: string,
   density: number,
-  scale: number
+  scale: number,
+  strokeWidth: number = 2
 ) {
   const numLines = Math.max(3, Math.floor(4 + (density / 100) * 16));
   const amplitude = (20 + (density / 100) * 30) * scale;
@@ -399,7 +407,9 @@ function drawWavyLines(
   const spacing = h / (numLines + 1);
 
   ctx.strokeStyle = color;
-  ctx.lineWidth = Math.max(1, 2.5 * scale);
+  ctx.lineWidth = strokeWidth;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
 
   for (let i = 1; i <= numLines; i++) {
     const baseY = i * spacing;
@@ -419,13 +429,16 @@ function drawTriangleGrid(
   h: number,
   color: string,
   density: number,
-  scale: number
+  scale: number,
+  strokeWidth: number = 2
 ) {
   const size = Math.max(15, 60 - (density / 100) * 45) / scale;
   const height = size * (Math.sqrt(3) / 2);
 
   ctx.strokeStyle = color;
-  ctx.lineWidth = Math.max(0.5, 1.5 * scale);
+  ctx.lineWidth = strokeWidth;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
 
   let row = 0;
   for (let y = 0; y < h + height * 2; y += height) {
@@ -449,7 +462,8 @@ function drawSquareSpiral(
   h: number,
   color: string,
   density: number,
-  scale: number
+  scale: number,
+  strokeWidth: number = 2
 ) {
   const cx = w / 2;
   const cy = h / 2;
@@ -458,7 +472,9 @@ function drawSquareSpiral(
   const stepSize = Math.max(4, 12 * scale);
 
   ctx.strokeStyle = color;
-  ctx.lineWidth = Math.max(1, 2 * scale);
+  ctx.lineWidth = strokeWidth;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
 
   let x = cx;
   let y = cy;
@@ -552,7 +568,8 @@ function drawVoronoi(
   _bgColor: string,
   density: number,
   scale: number,
-  seed: number
+  seed: number,
+  strokeWidth: number = 2
 ) {
   const numPoints = Math.max(5, Math.floor(8 + (density / 100) * 40));
   const rand = seededRandom(seed);
@@ -568,7 +585,9 @@ function drawVoronoi(
 
   // Draw Voronoi-like cells using nearest-point pixel assignment (simplified)
   ctx.strokeStyle = color;
-  ctx.lineWidth = Math.max(0.5, 1.5 * scale);
+  ctx.lineWidth = strokeWidth;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
 
   // Draw edges by finding midpoints between neighboring points
   for (let i = 0; i < points.length; i++) {
@@ -614,7 +633,8 @@ function drawArtDeco(
   h: number,
   color: string,
   density: number,
-  scale: number
+  scale: number,
+  strokeWidth: number = 2
 ) {
   const cx = w / 2;
   const cy = h / 2;
@@ -622,7 +642,9 @@ function drawArtDeco(
   const maxRadius = Math.max(w, h) * 0.7;
 
   ctx.strokeStyle = color;
-  ctx.lineWidth = Math.max(1, 2.5 * scale);
+  ctx.lineWidth = strokeWidth;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
 
   // Fan rays from bottom center
   for (let i = 0; i <= numRays; i++) {
@@ -662,13 +684,16 @@ function drawTessellation(
   h: number,
   color: string,
   density: number,
-  scale: number
+  scale: number,
+  strokeWidth: number = 2
 ) {
   const size = Math.max(20, 60 - (density / 100) * 40) / scale;
   const hexHeight = size * Math.sqrt(3);
 
   ctx.strokeStyle = color;
-  ctx.lineWidth = Math.max(0.5, 1.5 * scale);
+  ctx.lineWidth = strokeWidth;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
 
   let row = 0;
   for (let y = -hexHeight; y < h + hexHeight; y += hexHeight * 0.75) {
@@ -892,30 +917,28 @@ function generateSingleSVGPattern(
   }
 }
 
-function svgConcentricCircles(w: number, h: number, color: string, density: number, scale: number): string {
+function svgConcentricCircles(w: number, h: number, color: string, density: number, scale: number, strokeWidth: number = 2): string {
   const cx = w / 2;
   const cy = h / 2;
   const maxRadius = Math.max(w, h) * 0.8 * scale;
   // Mayor rango de densidad: de 5 a 80 círculos
   const numCircles = Math.max(5, Math.floor(5 + (density / 100) * 75));
   const spacing = maxRadius / numCircles;
-  const strokeWidth = Math.max(1, 2 * scale);
 
   let circles = '';
   for (let i = 1; i <= numCircles; i++) {
-    circles += `<circle cx="${cx}" cy="${cy}" r="${i * spacing}" fill="none" stroke="${color}" stroke-width="${strokeWidth}"/>`;
+    circles += `<circle cx="${cx}" cy="${cy}" r="${i * spacing}" fill="none" stroke="${color}" stroke-width="${strokeWidth}" stroke-linecap="round" stroke-linejoin="round"/>`;
   }
   return circles;
 }
 
-function svgDiagonalLines(w: number, h: number, color: string, density: number, scale: number): string {
+function svgDiagonalLines(w: number, h: number, color: string, density: number, scale: number, strokeWidth: number = 2): string {
   const spacing = Math.max(8, 60 - (density / 100) * 50) / scale;
   const diagonal = Math.sqrt(w * w + h * h);
-  const strokeWidth = Math.max(1, 2 * scale);
 
   let lines = '';
   for (let i = -diagonal; i < diagonal * 2; i += spacing) {
-    lines += `<line x1="${i}" y1="0" x2="${i - h}" y2="${h}" stroke="${color}" stroke-width="${strokeWidth}"/>`;
+    lines += `<line x1="${i}" y1="0" x2="${i - h}" y2="${h}" stroke="${color}" stroke-width="${strokeWidth}" stroke-linecap="round"/>`;
   }
   return lines;
 }
@@ -933,12 +956,11 @@ function svgDotGrid(w: number, h: number, color: string, density: number, scale:
   return dots;
 }
 
-function svgWavyLines(w: number, h: number, color: string, density: number, scale: number): string {
+function svgWavyLines(w: number, h: number, color: string, density: number, scale: number, strokeWidth: number = 2): string {
   const numLines = Math.max(3, Math.floor(4 + (density / 100) * 16));
   const amplitude = (20 + (density / 100) * 30) * scale;
   const frequency = (0.01 + (density / 100) * 0.03) / scale;
   const spacing = h / (numLines + 1);
-  const strokeWidth = Math.max(1, 2.5 * scale);
 
   let waves = '';
   for (let i = 1; i <= numLines; i++) {
@@ -948,15 +970,14 @@ function svgWavyLines(w: number, h: number, color: string, density: number, scal
       const y = baseY + Math.sin(x * frequency + i * 0.8) * amplitude;
       path += ` L ${x} ${y}`;
     }
-    waves += `<path d="${path}" fill="none" stroke="${color}" stroke-width="${strokeWidth}"/>`;
+    waves += `<path d="${path}" fill="none" stroke="${color}" stroke-width="${strokeWidth}" stroke-linecap="round" stroke-linejoin="round"/>`;
   }
   return waves;
 }
 
-function svgTriangleGrid(w: number, h: number, color: string, density: number, scale: number): string {
+function svgTriangleGrid(w: number, h: number, color: string, density: number, scale: number, strokeWidth: number = 2): string {
   const size = Math.max(15, 60 - (density / 100) * 45) / scale;
   const height = size * (Math.sqrt(3) / 2);
-  const strokeWidth = Math.max(0.5, 1.5 * scale);
 
   let triangles = '';
   let row = 0;
@@ -966,7 +987,7 @@ function svgTriangleGrid(w: number, h: number, color: string, density: number, s
       const p1 = `${x},${y + height}`;
       const p2 = `${x + size / 2},${y}`;
       const p3 = `${x + size},${y + height}`;
-      triangles += `<polygon points="${p1} ${p2} ${p3}" fill="none" stroke="${color}" stroke-width="${strokeWidth}"/>`;
+      triangles += `<polygon points="${p1} ${p2} ${p3}" fill="none" stroke="${color}" stroke-width="${strokeWidth}" stroke-linejoin="round"/>`;
     }
     row++;
   }
@@ -1182,14 +1203,17 @@ function drawFractalTree(
   h: number,
   color: string,
   density: number,
-  scale: number
+  scale: number,
+  strokeWidth: number = 2
 ) {
   const maxDepth = Math.max(3, Math.floor(4 + (density / 100) * 7));
   const branchLength = (60 + (density / 100) * 40) * scale;
   const branchAngle = Math.PI / 6 + (density / 100) * (Math.PI / 6);
 
   ctx.strokeStyle = color;
-  ctx.lineWidth = Math.max(1, 2 * scale);
+  ctx.lineWidth = strokeWidth;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
 
   function drawBranch(x: number, y: number, angle: number, length: number, depth: number) {
     if (depth > maxDepth || length < 3) return;
@@ -1239,7 +1263,8 @@ function drawFlowLines(
   color: string,
   density: number,
   scale: number,
-  seed: number
+  seed: number,
+  strokeWidth: number = 2
 ) {
   const rand = seededRandom(seed);
   const numLines = Math.max(10, Math.floor(20 + (density / 100) * 60));
@@ -1247,7 +1272,9 @@ function drawFlowLines(
   const frequency = 0.01 + (density / 100) * 0.02;
   
   ctx.strokeStyle = color;
-  ctx.lineWidth = Math.max(0.5, 1.5 * scale);
+  ctx.lineWidth = strokeWidth;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
   
   for (let i = 0; i < numLines; i++) {
     const startY = (h / numLines) * i;
@@ -1274,14 +1301,17 @@ function drawWaveField(
   density: number,
   scale: number,
   seed: number,
-  randomFillPerElement: boolean = false
+  randomFillPerElement: boolean = false,
+  strokeWidth: number = 2
 ) {
   const rand = seededRandom(seed);
   const gridSize = Math.max(20, 60 - (density / 100) * 40);
   const cols = Math.ceil(w / gridSize) + 1;
   const rows = Math.ceil(h / gridSize) + 1;
   
-  ctx.lineWidth = Math.max(0.5, 1.5 * scale);
+  ctx.lineWidth = strokeWidth;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
   
   for (let row = 0; row < rows; row++) {
     for (let col = 0; col < cols; col++) {
@@ -1312,7 +1342,8 @@ function drawJoyDivision(
   color: string,
   density: number,
   scale: number,
-  seed: number
+  seed: number,
+  strokeWidth: number = 2
 ) {
   const rand = seededRandom(seed);
   const numLines = Math.max(20, Math.floor(30 + (density / 100) * 70));
@@ -1320,7 +1351,9 @@ function drawJoyDivision(
   const amplitude = h * 0.3 * scale;
   
   ctx.strokeStyle = color;
-  ctx.lineWidth = Math.max(1, 2 * scale);
+  ctx.lineWidth = strokeWidth;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
   
   for (let i = 0; i < numLines; i++) {
     const x = i * spacing;
@@ -1357,7 +1390,8 @@ function drawQuarterArcTruchet(
   color: string,
   density: number,
   scale: number,
-  seed: number
+  seed: number,
+  strokeWidth: number = 2
 ) {
   const rand = seededRandom(seed);
   const tileSize = Math.max(30, 80 - (density / 100) * 50) * scale;
@@ -1365,7 +1399,9 @@ function drawQuarterArcTruchet(
   const rows = Math.ceil(h / tileSize) + 1;
   
   ctx.strokeStyle = color;
-  ctx.lineWidth = Math.max(1, 2 * scale);
+  ctx.lineWidth = strokeWidth;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
   
   for (let row = 0; row < rows; row++) {
     for (let col = 0; col < cols; col++) {
@@ -1399,7 +1435,8 @@ function drawNodeGarden(
   color: string,
   density: number,
   scale: number,
-  seed: number
+  seed: number,
+  strokeWidth: number = 2
 ) {
   const rand = seededRandom(seed);
   const numNodes = Math.max(20, Math.floor(30 + (density / 100) * 70));
@@ -1416,7 +1453,9 @@ function drawNodeGarden(
   
   ctx.strokeStyle = color;
   ctx.fillStyle = color;
-  ctx.lineWidth = Math.max(0.5, 1 * scale);
+  ctx.lineWidth = strokeWidth;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
   
   // Draw connections
   for (let i = 0; i < nodes.length; i++) {
@@ -1499,7 +1538,8 @@ function drawConcentricNoiseRings(
   color: string,
   density: number,
   scale: number,
-  seed: number
+  seed: number,
+  strokeWidth: number = 2
 ) {
   const rand = seededRandom(seed);
   const cx = w / 2;
@@ -1509,7 +1549,9 @@ function drawConcentricNoiseRings(
   const spacing = maxRadius / numRings;
   
   ctx.strokeStyle = color;
-  ctx.lineWidth = Math.max(0.5, 1.5 * scale);
+  ctx.lineWidth = strokeWidth;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
   
   for (let i = 1; i <= numRings; i++) {
     const baseRadius = i * spacing;
@@ -1542,7 +1584,8 @@ function drawChevronPattern(
   h: number,
   color: string,
   density: number,
-  scale: number
+  scale: number,
+  strokeWidth: number = 2
 ) {
   const chevronSize = Math.max(20, 60 - (density / 100) * 40) * scale;
   const chevronHeight = chevronSize * 0.6;
@@ -1550,7 +1593,9 @@ function drawChevronPattern(
   const rows = Math.ceil(h / chevronHeight) + 2;
   
   ctx.strokeStyle = color;
-  ctx.lineWidth = Math.max(1, 2 * scale);
+  ctx.lineWidth = strokeWidth;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
   
   for (let row = 0; row < rows; row++) {
     const offset = row % 2 === 0 ? 0 : chevronSize / 2;
