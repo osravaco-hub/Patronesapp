@@ -1,27 +1,15 @@
 import { useState } from 'react';
-
-type Page = 'landing' | 'generator' | 'dashboard';
-
-// Lazy imports to avoid circular dependencies
-import NewLanding from './pages/NewLanding';
-import Landing from './pages/Landing';
+import Generator from './pages/Generator';
 import Dashboard from './pages/Dashboard';
 
-export default function App() {
-  const [page, setPage] = useState<Page>('landing');
+type Page = 'generator' | 'dashboard';
 
-  if (page === 'generator') {
-    return <Landing onNavigateDashboard={() => setPage('dashboard')} />;
-  }
+export default function App() {
+  const [page, setPage] = useState<Page>('generator');
 
   if (page === 'dashboard') {
-    return <Dashboard onBack={() => setPage('landing')} />;
+    return <Dashboard onBack={() => setPage('generator')} />;
   }
 
-  return (
-    <NewLanding
-      onNavigateGenerator={() => setPage('generator')}
-      onNavigateDashboard={() => setPage('dashboard')}
-    />
-  );
+  return <Generator onNavigateDashboard={() => setPage('dashboard')} />;
 }

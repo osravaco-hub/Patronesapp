@@ -16,7 +16,8 @@ interface ExportButtonProps {
   config: PatternConfig;
   seed: number;
   tier: UserTier;
-  transparentBackground: boolean;
+  transparentBackground?: boolean;
+  downloadsToday?: number;
   onDownload: () => void;
   onPremiumClick: () => void;
 }
@@ -25,7 +26,8 @@ export default function ExportButton({
   config,
   seed,
   tier,
-  transparentBackground,
+  transparentBackground = false,
+  downloadsToday = 0,
   onDownload,
   onPremiumClick,
 }: ExportButtonProps) {
@@ -82,10 +84,10 @@ export default function ExportButton({
         onClick={() => setShowOptions(!showOptions)}
         disabled={isExporting}
         className={`
-          w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-semibold text-white transition-all duration-200
+          w-full flex items-center justify-center gap-2 px-6 py-4 rounded-lg font-semibold transition-all duration-200
           ${success
-            ? 'bg-green-500 shadow-md shadow-green-500/20'
-            : 'bg-accent hover:bg-accent/90 shadow-md shadow-accent/20'
+            ? 'bg-green-500 text-white shadow-md shadow-green-500/20'
+            : 'bg-accent text-accent-text hover:opacity-90'
           }
           disabled:opacity-70 disabled:cursor-not-allowed
         `}

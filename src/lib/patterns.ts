@@ -32,11 +32,13 @@ export type PatternTier = 'ultra-basic' | 'basic' | 'advanced';
 
 export interface PatternConfig {
   type: PatternId;
-  color: string;
+  color: string; // Color del borde/línea
+  fillColor?: string; // Color del relleno (opcional, si no se usa, se usa color)
   backgroundColor: string;
   density: number; // 0-100
   rotation: number; // 0-360
   scale: number; // 0.5-2.0
+  strokeWidth?: number; // Grosor de línea
   tilePattern: boolean; // Repetir patrón en cuadrícula
 }
 
@@ -79,10 +81,12 @@ export const PATTERN_DEFINITIONS: PatternDefinition[] = [
 export const defaultConfig: PatternConfig = {
   type: 'concentricCircles',
   color: '#2563EB',
+  fillColor: undefined, // Si no se define, se usa el mismo que color
   backgroundColor: '#FAFAFA',
   density: 50,
   rotation: 0,
   scale: 1.0,
+  strokeWidth: 2,
   tilePattern: false,
 };
 
