@@ -9,25 +9,25 @@ interface DynamicParamsProps {
 const PATTERN_PARAMS: Record<PatternId, string[]> = {
   concentricCircles: ['density', 'rotation', 'scale', 'strokeWidth'],
   diagonalLines: ['density', 'rotation', 'strokeWidth'],
-  dotGrid: ['density'],
+  dotGrid: ['density', 'quantity'],
   wavyLines: ['density', 'rotation', 'strokeWidth'],
   triangleGrid: ['density', 'strokeWidth'],
   squareSpiral: ['density', 'rotation', 'scale', 'strokeWidth'],
-  scandinavianCross: ['density'],
-  verticalStripes: ['density'],
+  scandinavianCross: ['density', 'strokeWidth', 'quantity'],
+  verticalStripes: ['density', 'quantity'],
   voronoi: ['density', 'scale', 'strokeWidth'],
   artDeco: ['density', 'scale', 'strokeWidth'],
   tessellation: ['density', 'scale', 'strokeWidth'],
   fractalTree: ['density', 'scale', 'strokeWidth'],
   flowLines: ['density', 'scale', 'strokeWidth'],
-  waveField: ['density', 'scale', 'strokeWidth'],
+  waveField: ['density', 'scale', 'strokeWidth', 'quantity'],
   joyDivision: ['density', 'scale', 'strokeWidth'],
   quarterArcTruchet: ['density', 'scale', 'strokeWidth'],
   nodeGarden: ['density', 'scale', 'strokeWidth'],
-  halftoneDots: ['density', 'scale'],
+  halftoneDots: ['density', 'scale', 'quantity'],
   concentricNoiseRings: ['density', 'scale', 'strokeWidth'],
   chevronPattern: ['density', 'rotation', 'strokeWidth'],
-  triangularMosaic: ['density', 'scale'],
+  triangularMosaic: ['density', 'scale', 'quantity'],
 };
 
 const PARAM_LABELS: Record<string, string> = {
@@ -35,6 +35,7 @@ const PARAM_LABELS: Record<string, string> = {
   rotation: 'Rotación',
   scale: 'Escala',
   strokeWidth: 'Grosor',
+  quantity: 'Cantidad',
 };
 
 const PARAM_CONFIG: Record<string, { min: number; max: number; step: number; suffix?: string }> = {
@@ -42,6 +43,7 @@ const PARAM_CONFIG: Record<string, { min: number; max: number; step: number; suf
   rotation: { min: 0, max: 360, step: 5, suffix: '°' },
   scale: { min: 0.5, max: 2.0, step: 0.1 },
   strokeWidth: { min: 0.5, max: 20, step: 0.5, suffix: 'px' },
+  quantity: { min: 0, max: 100, step: 5, suffix: '%' },
 };
 
 export default function DynamicParams({ config, onChange }: DynamicParamsProps) {
@@ -53,6 +55,7 @@ export default function DynamicParams({ config, onChange }: DynamicParamsProps) 
 
   const getValue = (key: string): number => {
     if (key === 'strokeWidth') return config.strokeWidth ?? 2;
+    if (key === 'quantity') return config.quantity ?? 100;
     return (config as any)[key] ?? 50;
   };
 

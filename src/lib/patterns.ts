@@ -41,6 +41,7 @@ export interface PatternConfig {
   strokeWidth?: number; // Grosor de línea
   tilePattern: boolean; // Repetir patrón en cuadrícula
   randomFillPerElement?: boolean; // Colores aleatorios por elemento individual
+  quantity?: number; // Porcentaje de elementos visibles (0-100)
 }
 
 export interface PatternDefinition {
@@ -89,6 +90,7 @@ export const defaultConfig: PatternConfig = {
   scale: 1.0,
   strokeWidth: 2, // Grosor de línea por defecto (como en Illustrator)
   tilePattern: false,
+  quantity: 100, // 100% de elementos visibles por defecto
 };
 
 /**
@@ -144,7 +146,7 @@ export function generatePattern(
   config: PatternConfig,
   seed: number = 42
 ) {
-  const { type, color, backgroundColor, density, rotation, scale, tilePattern, randomFillPerElement, strokeWidth = 2 } = config;
+  const { type, color, backgroundColor, density, rotation, scale, tilePattern, randomFillPerElement, strokeWidth = 2, quantity = 100 } = config;
 
   // Clear and fill background
   ctx.clearRect(0, 0, width, height);
@@ -171,7 +173,7 @@ export function generatePattern(
       for (let col = 0; col < cols; col++) {
         ctx.save();
         ctx.translate(col * tileSize, row * tileSize);
-        drawSinglePattern(ctx, type, tileSize, tileSize, color, backgroundColor, density, scale, seed, randomFillPerElement, strokeWidth);
+        drawSinglePattern(ctx, type, tileSize, tileSize, color, backgroundColor, density, scale, seed, randomFillPerElement, strokeWidth, quantity);
         ctx.restore();
       }
     }
@@ -188,7 +190,7 @@ export function generatePattern(
     ctx.rotate((rotation * Math.PI) / 180);
     ctx.translate(-patternWidth / 2, -patternHeight / 2);
 
-    drawSinglePattern(ctx, type, patternWidth, patternHeight, color, backgroundColor, density, scale, seed, randomFillPerElement, strokeWidth);
+    drawSinglePattern(ctx, type, patternWidth, patternHeight, color, backgroundColor, density, scale, seed, randomFillPerElement, strokeWidth, quantity);
 
     ctx.restore();
   }
@@ -237,7 +239,8 @@ function drawSinglePattern(
   scale: number,
   seed: number,
   randomFillPerElement: boolean = false,
-  strokeWidth: number = 2
+  strokeWidth: number = 2,
+  quantity: number = 100
 ) {
   switch (type) {
     case 'concentricCircles':
@@ -247,7 +250,7 @@ function drawSinglePattern(
       drawDiagonalLines(ctx, w, h, color, density, scale, strokeWidth);
       break;
     case 'dotGrid':
-      drawDotGrid(ctx, w, h, color, density, scale, randomFillPerElement);
+      drawDotGrid(ctx, w, h, color, density, scale, randomFillPerElement, quantity);
       break;
     case 'wavyLines':
       drawWavyLines(ctx, w, h, color, density, scale, strokeWidth);
@@ -259,10 +262,10 @@ function drawSinglePattern(
       drawSquareSpiral(ctx, w, h, color, density, scale, strokeWidth);
       break;
     case 'scandinavianCross':
-      drawScandinavianCross(ctx, w, h, color, density, scale, randomFillPerElement);
+      drawScandinavianCross(ctx, w, h, color, density, scale, randomFillPerElement, strokeWidth, quantity);
       break;
     case 'verticalStripes':
-      drawVerticalStripes(ctx, w, h, color, density, scale, randomFillPerElement);
+      drawVerticalStripes(ctx, w, h, color, density, scale, randomFillPerElement, quantity);
       break;
     case 'voronoi':
       drawVoronoi(ctx, w, h, color, backgroundColor, density, scale, seed, strokeWidth);
@@ -280,7 +283,7 @@ function drawSinglePattern(
       drawFlowLines(ctx, w, h, color, density, scale, seed, strokeWidth);
       break;
     case 'waveField':
-      drawWaveField(ctx, w, h, color, density, scale, seed, randomFillPerElement, strokeWidth);
+      drawWaveField(ctx, w, h, color, density, scale, seed, randomFillPerElement, strokeWidth, quantity);
       break;
     case 'joyDivision':
       drawJoyDivision(ctx, w, h, color, density, scale, seed, strokeWidth);
@@ -292,7 +295,7 @@ function drawSinglePattern(
       drawNodeGarden(ctx, w, h, color, density, scale, seed, strokeWidth);
       break;
     case 'halftoneDots':
-      drawHalftoneDots(ctx, w, h, color, density, scale, seed, randomFillPerElement);
+      drawHalftoneDots(ctx, w, h, color, density, scale, seed, randomFillPerElement, quantity);
       break;
     case 'concentricNoiseRings':
       drawConcentricNoiseRings(ctx, w, h, color, density, scale, seed, strokeWidth);
@@ -301,7 +304,7 @@ function drawSinglePattern(
       drawChevronPattern(ctx, w, h, color, density, scale, strokeWidth);
       break;
     case 'triangularMosaic':
-      drawTriangularMosaic(ctx, w, h, color, density, scale, seed, randomFillPerElement);
+      drawTriangularMosaic(ctx, w, h, color, density, scale, seed, randomFillPerElement, quantity);
       break;
   }
 }
@@ -370,13 +373,17 @@ function drawDotGrid(
   color: string,
   density: number,
   scale: number,
-  randomFillPerElement: boolean = false
+  randomFillPerElement: boolean = false,
+  quantity: number = 100
 ) {
   const spacing = Math.max(10, 50 - (density / 100) * 40) / scale;
   const radius = Math.max(1.5, (3 + (density / 100) * 4) * scale);
 
   for (let x = spacing / 2; x < w + spacing; x += spacing) {
     for (let y = spacing / 2; y < h + spacing; y += spacing) {
+      // Skip elements based on quantity
+      if (Math.random() * 100 > quantity) continue;
+
       if (randomFillPerElement) {
         const randomColor = '#' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0');
         ctx.fillStyle = randomColor;
@@ -513,14 +520,19 @@ function drawScandinavianCross(
   color: string,
   density: number,
   scale: number,
-  randomFillPerElement: boolean = false
+  randomFillPerElement: boolean = false,
+  strokeWidth: number = 2,
+  quantity: number = 100
 ) {
   const spacing = Math.max(25, 80 - (density / 100) * 55) / scale;
   const armLength = spacing * 0.35 * scale;
-  const armWidth = Math.max(2, 4 * scale);
+  const armWidth = strokeWidth;
 
   for (let x = spacing / 2; x < w + spacing; x += spacing) {
     for (let y = spacing / 2; y < h + spacing; y += spacing) {
+      // Skip elements based on quantity (100 = all visible, 0 = none visible)
+      if (Math.random() * 100 > quantity) continue;
+
       if (randomFillPerElement) {
         const randomColor = '#' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0');
         ctx.fillStyle = randomColor;
@@ -542,12 +554,16 @@ function drawVerticalStripes(
   color: string,
   density: number,
   scale: number,
-  randomFillPerElement: boolean = false
+  randomFillPerElement: boolean = false,
+  quantity: number = 100
 ) {
   const stripeWidth = Math.max(4, 30 - (density / 100) * 25) * scale;
   const gap = Math.max(4, 20 - (density / 100) * 15) * scale;
 
   for (let x = 0; x < w + stripeWidth + gap; x += stripeWidth + gap) {
+    // Skip elements based on quantity
+    if (Math.random() * 100 > quantity) continue;
+
     if (randomFillPerElement) {
       const randomColor = '#' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0');
       ctx.fillStyle = randomColor;
@@ -1302,7 +1318,8 @@ function drawWaveField(
   scale: number,
   seed: number,
   randomFillPerElement: boolean = false,
-  strokeWidth: number = 2
+  strokeWidth: number = 2,
+  quantity: number = 100
 ) {
   const rand = seededRandom(seed);
   const gridSize = Math.max(20, 60 - (density / 100) * 40);
@@ -1315,6 +1332,9 @@ function drawWaveField(
   
   for (let row = 0; row < rows; row++) {
     for (let col = 0; col < cols; col++) {
+      // Skip elements based on quantity
+      if (Math.random() * 100 > quantity) continue;
+
       const x = col * gridSize;
       const y = row * gridSize;
       const angle = rand() * Math.PI * 2;
@@ -1492,7 +1512,8 @@ function drawHalftoneDots(
   density: number,
   scale: number,
   seed: number,
-  randomFillPerElement: boolean = false
+  randomFillPerElement: boolean = false,
+  quantity: number = 100
 ) {
   const rand = seededRandom(seed);
   const gridSize = Math.max(15, 40 - (density / 100) * 25) * scale;
@@ -1501,6 +1522,9 @@ function drawHalftoneDots(
   
   for (let row = 0; row < rows; row++) {
     for (let col = 0; col < cols; col++) {
+      // Skip elements based on quantity
+      if (Math.random() * 100 > quantity) continue;
+
       const x = col * gridSize + gridSize / 2;
       const y = row * gridSize + gridSize / 2;
       
@@ -1848,7 +1872,8 @@ function drawTriangularMosaic(
   density: number,
   scale: number,
   seed: number,
-  randomFillPerElement: boolean = false
+  randomFillPerElement: boolean = false,
+  quantity: number = 100
 ) {
   const rand = seededRandom(seed);
   // Cell size based on density (more density = smaller cells)
@@ -1861,6 +1886,9 @@ function drawTriangularMosaic(
   
   for (let row = -1; row < rows; row++) {
     for (let col = -1; col < cols; col++) {
+      // Skip elements based on quantity
+      if (Math.random() * 100 > quantity) continue;
+
       const x = col * cellSize;
       const y = row * cellSize;
       
