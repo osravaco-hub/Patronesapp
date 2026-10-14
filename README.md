@@ -27,6 +27,42 @@ Generador de patrones geométricos elegante y personalizable. Crea patrones úni
 
 [Ver Demo](https://geopattern.vercel.app)
 
+## 🚀 Despliegue Rápido en Vercel
+
+### En 3 pasos:
+
+1. **Sube tu código a GitHub**
+```bash
+git init
+git add .
+git commit -m "Initial commit"
+git remote add origin https://github.com/TU-USUARIO/geopattern.git
+git push -u origin main
+```
+
+2. **Importa en Vercel**
+- Ve a [vercel.com/new](https://vercel.com/new)
+- Importa tu repositorio
+- Click en "Deploy"
+
+3. **¡Listo!** Tu app estará en `https://geopattern-TU-USUARIO.vercel.app`
+
+### 📚 Guías de Despliegue
+
+- [🚀 Despliegue Rápido](./QUICK_DEPLOY.md) - En 3 pasos
+- [📖 Guía Completa](./VERCEL_DEPLOYMENT.md) - Con todos los detalles
+- [✅ Checklist](./VERCEL_CHECKLIST.md) - Verifica todo antes de desplegar
+- [🔧 GitHub Actions](./GITHUB_ACTIONS.md) - CI/CD automático
+
+### ⚡ Características del Despliegue
+
+- ✅ **Despliegue automático** en cada push a `main`
+- ✅ **HTTPS gratuito** con certificado SSL
+- ✅ **CDN global** para máxima velocidad
+- ✅ **Preview deployments** en pull requests
+- ✅ **Dominio personalizado** (opcional)
+- ✅ **Plan free suficiente** para esta app
+
 ## 📋 Requisitos
 
 - Node.js 18+ 
